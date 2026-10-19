@@ -1,1 +1,0 @@
-# NRI_IRMINSUL
