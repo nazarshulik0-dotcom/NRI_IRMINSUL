@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ірмінсуль — Хроніки Ентропії</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: #131c2e;
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Бічна панель навігації */
+        sidebar {
+            width: 300px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            text-align: left;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--text-main);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        /* Основна робоча зона */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        /* Блоки та картки */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Секція завантаження сесійних даних */
+        .upload-section {
+            background-color: var(--panel-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .upload-section h3 {
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Бічна панель -->
+    <sidebar>
+        <div class="logo">⚡ ІРМІНСУЛЬ</div>
+        <button class="nav-btn active">🌳 Древо Історії (Лор)</button>
+        <button class="nav-btn">🗺️ Дані Інтерактивної Карти</button>
+        <button class="nav-btn">🎙️ Транскрипції Сесій</button>
+        <button class="nav-btn">⚙️ Налаштування зв'язку</button>
+    </sidebar>
+
+    <!-- Основний контент -->
+    <main>
+        <h1>Хроніки світу: Ентропія</h1>
+        <p class="subtitle">Центральний вузол пам'яті та консолідації подій кампанії.</p>
+
+        <!-- Древо / Візуалізація блокнота -->
+        <div class="card-grid">
+            <div class="card">
+                <h3>🌌 Походження (Світ Ковчега)</h3>
+                <p>Штучно створений «Ковчег», уламок іншого виміру цивілізації «Вавилонія». Захисний Бар'єр деградує, і у світ нестримно просочується руйнівна Скверна.</p>
+            </div>
+            <div class="card">
+                <h3>🚆 Точка Нуль (Початок)</h3>
+                <p>Партія розпочинає свій шлях у звичайному вагоні метро, який через просторову турбулентність застрягає у невідомому секторі. Головна ціль — пробитися до Головної Будівлі.</p>
+            </div>
+            <div class="card">
+                <h3>⚙️ Технології та Мережа</h3>
+                <p>Використання артефактів, Аура-кристалів та вивчення мови предків для програмування автоматонів і взаємодії з мережею дев'яти ШІ-Архангелів.</p>
+            </div>
+            <div class="card">
+                <h3>🎯 Глобальна Мета</h3>
+                <p>Виживання серед мутованої флори й фауни, патрулів механізмів та активація Маяків задля відновлення контролю над згасаючою інфраструктурою Ковчега.</p>
+            </div>
+        </div>
+
+        <!-- Зона завантаження логів з карти / диска -->
+        <div class="upload-section">
+            <h3>Звантажити дані нової сесії</h3>
+            <p>Перетягніть сюди файли логів карти (`history.json`) або розшифровку сесії для оновлення Древа.</p>
+            <button class="btn" onclick="alert('Модуль прийому даних з Google Диску / файлів готовий до підключення!')">Вибрати файл сесії</button>
+        </div>
+    </main>
+
+</body>
+</html>
