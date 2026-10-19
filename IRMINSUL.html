@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ірмінсуль — База Хронік Ентропії</title>
+    <style>
+        :root {
+            --bg-color: #060913;
+            --panel-bg: #0f172a;
+            --panel-border: #1e293b;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.15);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --sector-glow: #6366f1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Бічна панель навігації */
+        aside {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            text-align: left;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background-color: var(--accent-glow);
+            color: var(--text-main);
+            border-color: var(--accent);
+            padding-left: 18px;
+        }
+
+        /* Головна робоча зона (полотно дерева) */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+        }
+
+        header {
+            margin-bottom: 35px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #f1f5f9, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        /* Структура древа (ноди та картки) */
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            padding-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+            border-left: 3px solid var(--accent);
+            padding-left: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .node-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 22px;
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .node-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+        .node-card h3 {
+            color: var(--text-main);
+            margin-bottom: 12px;
+            font-size: 1.15rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .node-badge {
+            font-size: 0.7rem;
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .node-card p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .node-card ul {
+            list-style-type: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .node-card li {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .node-card li::before {
+            content: "▪";
+            color: var(--accent);
+        }
+
+        /* Панель завантаження сесій */
+        .session-panel {
+            background: linear-gradient(135deg, var(--panel-bg), #090d1f);
+            border: 2px dashed var(--panel-border);
+            border-radius: 14px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: #060913;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-top: 15px;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Бічна панель управління деревом -->
+    <aside>
+        <div class="logo">⚡ ІРМІНСУЛЬ</div>
+        <div class="logo-sub">Древо Історії • Ентропія</div>
+        
+        <div class="nav-menu">
+            <button class="nav-btn active">🌌 Загальна картина світу</button>
+            <button class="nav-btn">🏛️ Сектор 0: Цитадель Сіель</button>
+            <button class="nav-btn">🌿 Сектор I: Сади та Естакади</button>
+            <button class="nav-btn">⚙️ Сектор II: Іржаві Пустки</button>
+            <button class="nav-btn">💎 Сектор III: Кристалічні Солончаки</button>
+            <button class="nav-btn">🌊 Сектор IV: Затока Припливу</button>
+            <button class="nav-btn">🏙️ Сектор V: Примарний Мегаполіс</button>
+            <button class="nav-btn">⚡ Сектор VI: Грозові Топи</button>
+            <button class="nav-btn">🌳 Сектор VII: Ліс Великих Дерев</button>
+            <button class="nav-btn">☢️ Сектор VIII: Токсичні Джунглі</button>
+        </div>
+    </aside>
+
+    <!-- Основний контент (візуалізація вузлів) -->
+    <main>
+        <header>
+            <h1>База даних світу: Ентропія</h1>
+            <p class="subtitle">Структурований архів реальності, що розростається корінням від центру до зовнішніх секторів.</p>
+        </header>
+
+        <div class="tree-container">
+            
+            <!-- Глобальна картина -->
+            <div>
+                <div class="section-title">Ядро системи та концепція</div>
+                <div class="grid">
+                    <div class="node-card">
+                        <h3>Світ Ковчега <span class="node-badge">Локація</span></h3>
+                        <p>Вавилонія — острів-континент без гір і льоду, поділений на вісім зовнішніх секторів (I–VIII) і центр (Сектор 0)[cite: 1].</p>
+                        <ul>
+                            <li>Старт: вагон метро у Секторі I біля межі Сектора 0[cite: 1].</li>
+                            <li>Цивілізація зникла, лишивши руїни та роботизовані механізми[cite: 1].</li>
+                        </ul>
+                    </div>
+                    <div class="node-card">
+                        <h3>Бар'єр та Скверна <span class="node-badge">Загроза</span></h3>
+                        <p>Захисна оболонка пошкоджена (просідання на півночі у Секторі VIII та над вежею Сіель)[cite: 1].</p>
+                        <ul>
+                            <li>Скверна просочується крізь тріщини та мутує природу й техніку[cite: 1].</li>
+                            <li>Мета: перезапустити маяки зовнішніх секторів, щоб послабити печать на центрі[cite: 1].</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Центр -->
+            <div>
+                <div class="section-title">Центральний вузол</div>
+                <div class="grid">
+                    <div class="node-card">
+                        <h3>Сектор 0: Цитадель Сіель <span class="node-badge">Фінал</span></h3>
+                        <p>Випалена земля з чорного обсидіану, нестабільний простір і час. Колосальна ступінчаста вежа Сіель[cite: 1].</p>
+                        <ul>
+                            <li>Головний ШІ: Сіель тримає крихти балансу острова[cite: 1].</li>
+                            <li>Захист: Карантинний Купол або Кільцева Безодня з розвідними мостами[cite: 1].</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Зовнішні сектори (I - VIII) -->
+            <div>
+                <div class="section-title">Зовнішні сектори (I – VIII)</div>
+                <div class="grid">
+                    <div class="node-card">
+                        <h3>Сектор I <span class="node-badge">Старт</span></h3>
+                        <p><strong>Сади та Старі Естакади:</strong> м'який клімат, рівнини, що світтяться в сутінках, ботанічні павільйони[cite: 1].</p>
+                        <ul>
+                            <li>Маяк I: найдоброзичливіший Архангел-наставник[cite: 1].</li>
+                        </ul>
+                    </div>
+                    <div class="node-card">
+                        <h3>Сектор II <span class="node-badge">Індустрія</span></h3>
+                        <p><strong>Іржаві Пустки:</strong> рудий металевий пісок, остови гігантських крокуючих фабрик і склади запчастин[cite: 1].</p>
+                        <ul>
+                            <li>Небезпеки: піщані бурі, збирачі-автоматони[cite: 1].</li>
+                        </ul>
+                    </div>
+                    <div class="node-card">
+                        <h3>Сектор III <span class="node-badge">Резонанс</span></h3>
+                        <p><strong>Кристалічні Солончаки:</strong> біла соляна рівнина з лісами гострих Аура-кристалів, що гудуть на вітрі[cite: 1].</p>
+                        <ul>
+                            <li>Ефірне Озеро: кратер зі світловою енергетичною рідиною[cite: 1].</li>
+                        </ul>
+                    </div>
+                    <div class="node-card">
+                        <h3>Сектор IV <span class="node-badge">Морський</span></h3>
+                        <p><strong>Затока Застиглого Припливу:</strong> порти, доки та унікальна механіка — раз на добу вода повністю відходить із дна[cite: 1].</p>
+                        <ul>
+                            <li>Маяк IV керує шлюзами затоки[cite: 1].</li>
+                        </ul>
+                    </div>
+                    <div class="node-card">
+                        <h3>Сектор V <span class="node-badge">Місто</span></h3>
+                        <p><strong>Примарний Мегаполіс:</strong> бетонні джунглі, наномашинний туман, що проектує голографічні «ехо» мешканців минулого[cite: 1].</p>
+                        <ul>
+                            <li>Архангел пам'ятає всю історію міста[cite: 1].</li>
+                        </ul>
+                    </div>
+                    <div class="node-card">
+                        <h3>Сектор VI <span class="node-badge">Аномалія</span></h3>
+                        <p><strong>Грозові Топи:</strong> затоплені мангри, статика в повітрі, левітуючі брили ґрунту та фіолетові блискавки[cite: 1].</p>
+                        <ul>
+                            <li>Архангел «нервовий» через збої гравітації[cite: 1].</li>
+                        </ul>
+                    </div>
+                    <div class="node-card">
+                        <h3>Сектор VII <span class="node-badge">Біосфера</span></h3>
+                        <p><strong>Ліс Великих Дерев:</strong> монументальні дерева-титани, сутінки внизу в корінні та сонячне життя у кронах[cite: 1].</p>
+                        <ul>
+                            <li>Зв'язок через стародавні ліфти у стовбурах[cite: 1].</li>
+                        </ul>
+                    </div>
+                    <div class="node-card">
+                        <h3>Сектор VIII <span class="node-badge">Прорив</span></h3>
+                        <p><strong>Токсичні Джунглі:</strong> агресивні пульсуючі ліани, кислотні болота та найвища концентрація Скверни[cite: 1].</p>
+                        <ul>
+                            <li>Маяк VIII частково пошкоджений і спотворений[cite: 1].</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Секція для майбутніх сесій -->
+            <div class="session-panel">
+                <h3>Коренева система майбутніх сесій</h3>
+                <p>Сюди згодом підключатимуться експортовані логи карти та розшифровки діалогів для розбудови нових гілок древа.</p>
+                <button class="btn" onclick="alert('Ірмінсуль готовий до розширення! Чекаємо на дані сесій.')">Підключити новий вузол сесії</button>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>
