@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ІРМІНСУЛЬ — Нодове Полотно Хронік «Ентропія»</title>
+    <style>
+        :root {
+            --bg-canvas: #16181d;
+            --bg- chrome: #1e2028;
+            --bg-card-outer: #1b1d24;
+            --bg-card-inner: #14161c;
+            --border-frame: #363c4e;
+            --border-inner: #2a2f3d;
+            --line-default: #5c6bc0;
+            --line-active: #38bdf8;
+            --text-main: #dcddde;
+            --text-muted: #8e9297;
+            --link-cyan: #58a6ff;
+
+            /* Кольори акцентів для категорій */
+            --c-core: #f59e0b;
+            --c-start: #10b981;
+            --c-sector: #38bdf8;
+            --c-ai: #a855f7;
+            --c-mech: #6366f1;
+            --c-threat: #ef4444;
+            --c-session: #ec4899;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Верхня панель вкладок (як у Obsidian Canvas) */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 44px;
+            right: 0;
+            height: 40px;
+            background: #111318;
+            border-bottom: 1px solid #262933;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .tab-active {
+            background: var(--bg-canvas);
+            border: 1px solid #262933;
+            border-bottom: none;
+            padding: 6px 16px;
+            border-radius: 6px 6px 0 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .breadcrumb {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breadcrumb span {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-top {
+            background: #222632;
+            border: 1px solid #323846;
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-top:hover {
+            background: #2d3343;
+            color: #fff;
+            border-color: #4f5970;
+        }
+
+        .btn-top.active {
+            background: rgba(88, 166, 255, 0.18);
+            border-color: var(--link-cyan);
+            color: var(--link-cyan);
+        }
+
+        .btn-accent {
+            background: #3b4261;
+            border-color: #5c6bc0;
+            color: #fff;
+        }
+
+        .search-box {
+            background: #16181d;
+            border: 1px solid #323846;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.76rem;
+            width: 190px;
+            outline: none;
+            user-select: text;
+        }
+
+        .search-box:focus {
+            border-color: var(--link-cyan);
+        }
+
+        /* Ліва вертикальна панель іконок (як на скріншоті) */
+        .left-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 44px;
+            background: #111318;
+            border-right: 1px solid #262933;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0;
+            gap: 10px;
+            z-index: 101;
+        }
+
+        .side-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+
+        .side-icon:hover, .side-icon.active {
+            background: #222632;
+            color: #fff;
+            border-color: #363c4e;
+        }
+
+        /* Права плаваюча панель зуму та навігації */
+        .right-controls {
+            position: fixed;
+            top: 56px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 95;
+        }
+
+        .ctrl-btn {
+            width: 32px;
+            height: 32px;
+            background: #1e2028;
+            border: 1px solid #323846;
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .ctrl-btn:hover {
+            background: #2a2e3b;
+            color: #fff;
+        }
+
+        /* Нижній док швидкого створення (як у центрі внизу на скріншоті) */
+        .bottom-bar {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2028;
+            border: 1px solid #323846;
+            border-radius: 8px;
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 95;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        }
+
+        .dock-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dock-btn:hover, .dock-btn.active {
+            background: #2a2e3b;
+            color: #fff;
+            border-color: #454c63;
+        }
+
+        .status-footer {
+            position: fixed;
+            bottom: 4px;
+            right: 14px;
+            font-size: 0.7rem;
+            color: #686d7a;
+            z-index: 90;
+            pointer-events: none;
+        }
+
+        /* Полотно (Viewport & World) */
+        #viewport {
+            position: absolute;
+            top: 40px;
+            left: 44px;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            cursor: grab;
+            background-color: var(--bg-canvas);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        #viewport.panning {
+            cursor: grabbing;
+        }
+
+        #world {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 7000px;
+            height: 7000px;
+            transform-origin: 0 0;
+            will-change: transform;
+        }
+
+        /* Зовнішні Групові Контейнери (як рамка "Odinys" на скріншоті) */
+        .canvas-group-box {
+            position: absolute;
+            border: 1.5px solid #3c425c;
+            background: rgba(24, 27, 36, 0.35);
+            border-radius: 6px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .canvas-group-title {
+            position: absolute;
+            top: -26px;
+            left: 2px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #9aa2b8;
+            letter-spacing: 0.4px;
+        }
+
+        /* Шар SVG для ліній-коріння */
+        #edges-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 7000px;
+            height: 7000px;
+            pointer-events: none;
+            z-index: 1;
+            overflow: visible;
+        }
+
+        .edge-line {
+            fill: none;
+            stroke: var(--line-default);
+            stroke-width: 2.2px;
+            opacity: 0.85;
+            transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
+        }
+
+        .edge-pulse {
+            fill: none;
+            stroke: #818cf8;
+            stroke-width: 2px;
+            stroke-dasharray: 5 18;
+            animation: pulseFlow 2s linear infinite;
+            opacity: 0.45;
+        }
+
+        @keyframes pulseFlow {
+            to { stroke-dashoffset: -23; }
+        }
+
+        .edge-line.highlighted {
+            stroke: var(--line-active) !important;
+            stroke-width: 3.2px;
+            opacity: 1;
+            filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.55));
+        }
+
+        .edge-line.dimmed, .edge-pulse.dimmed {
+            opacity: 0.08;
+        }
+
+        .edge-text {
+            fill: #8b949e;
+            font-size: 11px;
+            font-weight: 600;
+            text-anchor: middle;
+            paint-order: stroke;
+            stroke: var(--bg-canvas);
+            stroke-width: 4px;
+        }
+
+        /* Картки-Ноди у стилі Obsidian Canvas (подвійна рамка + заголовок зверху) */
+        .canvas-node {
+            position: absolute;
+            width: 300px;
+            background: var(--bg-card-outer);
+            border: 1.5px solid var(--border-frame);
+            border-radius: 6px;
+            padding: 10px;
+            z-index: 2;
+            box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.15s, box-shadow 0.15s, opacity 0.2s;
+        }
+
+        /* Назва над карткою (як "Valdian Temple" / "High Priest" на скріншоті) */
+        .node-floating-label {
+            position: absolute;
+            top: -22px;
+            left: 2px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #a9b1d6;
+            white-space: nowrap;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .node-type-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Внутрішній бокс картки (як у Kamderah Temple) */
+        .node-inner-box {
+            background: var(--bg-card-inner);
+            border: 1.5px solid var(--border-inner);
+            border-radius: 4px;
+            padding: 12px 14px;
+            min-height: 115px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: grab;
+        }
+
+        .node-inner-box:active {
+            cursor: grabbing;
+        }
+
+        .canvas-node:hover {
+            border-color: #6366f1;
+            z-index: 6;
+        }
+
+        .canvas-node:hover .node-inner-box {
+            border-color: #434c6e;
+        }
+
+        .canvas-node.selected {
+            border-color: var(--link-cyan) !important;
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.35), 0 12px 32px rgba(0,0,0,0.75);
+            z-index: 12;
+        }
+
+        .canvas-node.dimmed {
+            opacity: 0.14;
+            pointer-events: none;
+        }
+
+        .node-link-title {
+            color: var(--link-cyan);
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            line-height: 1.3;
+        }
+
+        .node-link-title:hover {
+            text-decoration: underline;
+        }
+
+        .node-desc {
+            font-size: 0.78rem;
+            color: var(--text-main);
+            line-height: 1.45;
+        }
+
+        .node-meta-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 2px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .node-meta-list strong {
+            color: #c0caf5;
+        }
+
+        .node-meta-list .wiki-ref {
+            color: var(--link-cyan);
+            cursor: pointer;
+        }
+
+        /* Точки-порти на 4 сторонах картки для протягування нового коріння */
+        .port {
+            position: absolute;
+            width: 11px;
+            height: 11px;
+            background: #1e2028;
+            border: 2px solid #7aa2f7;
+            border-radius: 50%;
+            opacity: 0;
+            cursor: crosshair;
+            z-index: 15;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+
+        .canvas-node:hover .port {
+            opacity: 1;
+        }
+
+        .port:hover {
+            transform: scale(1.35);
+            background: var(--link-cyan);
+        }
+
+        .port-top    { top: -6px; left: calc(50% - 5.5px); }
+        .port-bottom { bottom: -6px; left: calc(50% - 5.5px); }
+        .port-left   { left: -6px; top: calc(50% - 5.5px); }
+        .port-right  { right: -6px; top: calc(50% - 5.5px); }
+
+        /* Бічний інспектор повного лору та редагування */
+        #inspector {
+            position: fixed;
+            top: 48px;
+            right: 58px;
+            bottom: 68px;
+            width: 390px;
+            background: #1a1c23;
+            border: 1px solid #363c4e;
+            border-radius: 8px;
+            z-index: 98;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -8px 0 28px rgba(0,0,0,0.65);
+            transform: translateX(470px);
+            transition: transform 0.22s ease;
+        }
+
+        #inspector.open {
+            transform: translateX(0);
+        }
+
+        .insp-head {
+            padding: 14px 16px;
+            border-bottom: 1px solid #2a2f3d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .insp-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            user-select: text;
+        }
+
+        .insp-section {
+            background: #13151a;
+            border: 1px solid #272b38;
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+
+        .insp-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--link-cyan);
+            margin-bottom: 4px;
+            letter-spacing: 0.6px;
+        }
+
+        .insp-text {
+            font-size: 0.83rem;
+            color: var(--text-main);
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        /* Модальне вікно */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #1b1d24;
+            border: 1px solid #3c425c;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 92vw;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .field label {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .input-ctrl {
+            background: #12141a;
+            border: 1px solid #2e3446;
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 5px;
+            font-size: 0.84rem;
+            user-select: text;
+        }
+
+        textarea.input-ctrl {
+            min-height: 85px;
+            resize: vertical;
+        }
+
+        .toast-msg {
+            position: fixed;
+            top: 52px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #222632;
+            border: 1px solid var(--link-cyan);
+            color: #fff;
+            padding: 7px 16px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 300;
+            display: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ліва панель інструментів у стилі Obsidian -->
+    <aside class="left-sidebar">
+        <button class="side-icon active" title="Полотно Ірмінсуля" onclick="resetCamera()">⚡</button>
+        <button class="side-icon" title="Ієрархічне Древо (Obsidian Canvas)" onclick="setCanvasLayout('tree')">🌳</button>
+        <button class="side-icon" title="Радіальна Карта-Паутина Вавилонії" onclick="setCanvasLayout('radial')">🕸️</button>
+        <button class="side-icon" title="Додати нову картку-вузол" onclick="openModal('node')">➕</button>
+        <button class="side-icon" title="Завантажити лог Ігрової Сесії" onclick="openModal('session')">🎙️</button>
+        <button class="side-icon" title="Експортувати базу JSON" onclick="exportDatabase()">💾</button>
+        <button class="side-icon" title="Скинути до базового лору блокнота" onclick="resetToDefaultLore()" style="margin-top:auto;">🔄</button>
+    </aside>
+
+    <!-- Верхня панель вкладок -->
+    <header class="top-bar">
+        <div style="display:flex; align-items:center; gap:18px;">
+            <div class="tab-active">
+                <span>⚡ Ірмінсуль — Ентропія.canvas</span>
+            </div>
+            <div class="breadcrumb">
+                z_Canvas &nbsp;›&nbsp; <span>Ієрархія Ковчега «Вавилонія» (Древо Історії)</span>
+            </div>
+        </div>
+
+        <div class="top-actions">
+            <input type="text" id="searchBox" class="search-box" placeholder="🔍 Пошук у Древі (Сіель, Сектор, ШІ)...">
+            <button class="btn-top active" id="btnTree" onclick="setCanvasLayout('tree')">🌳 Ієрархія (Canvas)</button>
+            <button class="btn-top" id="btnRadial" onclick="setCanvasLayout('radial')">🕸️ Паутина Острова</button>
+            <button class="btn-top btn-accent" onclick="openModal('session')">+ Записати Сесію</button>
+        </div>
+    </header>
+
+    <!-- Спливаюче повідомлення -->
+    <div id="toast" class="toast-msg"></div>
+
+    <!-- Права плаваюча панель масштабування -->
+    <div class="right-controls">
+        <button class="ctrl-btn" title="Наблизити" onclick="zoomBy(1.15)">＋</button>
+        <button class="ctrl-btn" title="Віддалити" onclick="zoomBy(0.85)">－</button>
+        <button class="ctrl-btn" title="Вписати все дерево в екран" onclick="resetCamera()">⛶</button>
+    </div>
+
+    <!-- Головне інтерактивне полотно -->
+    <div id="viewport">
+        <div id="world">
+            <div id="groups-container"></div>
+            <svg id="edges-svg">
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#5c6bc0" />
+                    </marker>
+                    <marker id="arrow-active" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#38bdf8" />
+                    </marker>
+                </defs>
+                <g id="edges-layer"></g>
+                <path id="temp-drag-line" class="edge-line highlighted" style="display:none; pointer-events:none;" />
+            </svg>
+            <div id="nodes-container"></div>
+        </div>
+    </div>
+
+    <!-- Нижній док фільтрації та додавання карток -->
+    <div class="bottom-bar">
+        <button class="dock-btn active" onclick="filterNodes('all', this)">Усе Древо</button>
+        <button class="dock-btn" onclick="filterNodes('core', this)">🏛️ Ядро & Сіель</button>
+        <button class="dock-btn" onclick="filterNodes('start', this)">🚆 Вагон Метро</button>
+        <button class="dock-btn" onclick="filterNodes('sector', this)">🗺️ 8 Секторів</button>
+        <button class="dock-btn" onclick="filterNodes('ai', this)">🤖 9 Архангелів</button>
+        <button class="dock-btn" onclick="filterNodes('mech', this)">💎 Механіки & Скверна</button>
+        <button class="dock-btn" onclick="filterNodes('session', this)">📜 Логи Сесій</button>
+    </div>
+
+    <!-- Нижній правий статус-бар (як у референсі) -->
+    <div class="status-footer" id="statusFooter">
+        Ірмінсуль v2.0 • Вузлів: 24 • Зв'язків: 36 • Потягніть за точку на краю картки, щоб створити нову гілку
+    </div>
+
+    <!-- Бічний інспектор повного опису вузла -->
+    <aside id="inspector">
+        <div class="insp-head">
+            <div>
+                <div id="insp-cat" style="font-size:0.68rem; color:var(--link-cyan); font-weight:700; text-transform:uppercase;">СЕКТОР</div>
+                <h3 id="insp-title" style="font-size:1.05rem; color:#fff; margin-top:2px;">Назва</h3>
+            </div>
+            <button class="btn-top" onclick="closeInspector()">✕</button>
+        </div>
+        <div class="insp-body" id="insp-content"></div>
+    </aside>
+
+    <!-- Модальне вікно додавання вузла / сесії -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modalHeading" style="color:#fff; font-size:1.05rem;">Додати новий вузол до Ірмінсуля</h3>
+            
+            <div class="field">
+                <label>Заголовок картки (Назва локації, персонажа або сесії)</label>
+                <input type="text" id="inpTitle" class="input-ctrl" placeholder="Наприклад: Сесія #1 — Прибуття у Сектор I">
+            </div>
+
+            <div class="field">
+                <label>Тип вузла</label>
+                <select id="inpType" class="input-ctrl">
+                    <option value="session">📜 Ігрова Сесія (Запис партії)</option>
+                    <option value="sector">🗺️ Сектор / Локація</option>
+                    <option value="ai">🤖 ШІ-Архангел / Персонаж гравця</option>
+                    <option value="mech">💎 Механіка / Артефакт / Кристал</option>
+                    <option value="threat">☢️ Скверна / Загроза / Бестіарій</option>
+                    <option value="core">🏛️ Центральний Лор Вавилонії</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>До якого вузла прив'язати корінь?</label>
+                <select id="inpParent" class="input-ctrl"></select>
+            </div>
+
+            <div class="field">
+                <label>Опис або зміст логу (.txt / history.json)</label>
+                <textarea id="inpSummary" class="input-ctrl" placeholder="Опишіть ключові рішення гравців, знахідки або завантажте файл нижче..."></textarea>
+            </div>
+
+            <div class="field">
+                <label>Імпорт файлу сесії з комп'ютера (.txt, .json)</label>
+                <input type="file" id="inpFile" class="input-ctrl" accept=".txt,.json" onchange="readLogFile(event)">
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;">
+                <button class="btn-top" onclick="closeModal()">Скасувати</button>
+                <button class="btn-top btn-accent" onclick="createNodeFromModal()">🌱 Додати на полотно</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const stripCite = (s) => s ? String(s).replace(/\s*\[cite:[^\]]*\]/g, '') : '';
+
+        // =========================================================================
+        // 1. БАЗА ЗНАНЬ «ЕНТРОПІЯ» (ВСЯ ІНФОРМАЦІЯ З БЛОКНОТА)
+        // =========================================================================
+        const defaultNodes = [
+            // --- РІВЕНЬ 0: ВЕРХОВНЕ ЯДРО ТА СТАРТ ---
+            {
+                id: 'core_ark',
+                label: 'Ковчег «Вавилонія» (Світ Ентропії)',
+                title: 'Штучний острів-континент Вавилонія',
+                type: 'core',
+                treePos: { x: 2520, y: 340 },
+                radialPos: { x: 2980, y: 2440 },
+                summary: 'Уламок іншого виміру без гір і льоду, поділений на 8 зовнішніх секторів (I–VIII) та центр (Сектор 0).',
+                meta: [
+                    ['Природа світу', 'Штучний Ковчег зниклої цивілізації'],
+                    ['Глобальна криза', 'Деградація Бар\'єра та витік Скверни'],
+                    ['Головна ціль', 'Перезапустити 8 Маяків і відкрити Сектор 0']
+                ],
+                details: {
+                    'Архітектура Ковчега': 'Вавилонія — острів-континент без гір і кріо-біому, поділений на вісім зовнішніх секторів (I–VIII) і центральний Сектор 0[cite: 1, 2]. Кожен зовнішній сектор утримує власний Маяк із ШІ-архангелом[cite: 1, 2].',
+                    'Ентропія та Бар\'єр': 'Через відсутність технічного обслуговування захисний Бар\'єр над островом тріщить. Найбільше просідання — на північному заході (Сектор VIII) і прямо над вежею Сіель[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'sec_0',
+                label: 'Сектор 0 (Центр): Цитадель СІЕЛЬ',
+                title: 'Попелясте Кільце та Ядро «СІЕЛЬ»',
+                type: 'core',
+                treePos: { x: 2920, y: 630 },
+                radialPos: { x: 2980, y: 2900 },
+                summary: 'Випалена земля з гладкого чорного обсидіану, струмки рідкого світла та колосальна ступінчаста вежа верховного ШІ Сіель[cite: 1, 2].',
+                meta: [
+                    ['Верховний ШІ', 'Сіель — головний тримач балансу острова[cite: 1, 2]'],
+                    ['Захист А', 'Карантинний Купол (Стіна Світла)[cite: 1, 2]'],
+                    ['Захист Б', 'Кільцева Безодня та розвідні мости[cite: 1, 2]']
+                ],
+                details: {
+                    'Ландшафт і Цитадель': 'Земля випалена енергетичними викидами до гладкого чорного обсидіану, по ній течуть струмки рідкого світла з пошкоджених магістралей. Простір і час ледь помітно тремтять. Над вежею Сіель зяє головна пробоїна в Бар\'єрі[cite: 1, 2].',
+                    'Як закритий прохід зі старту': 'Поєднання Карантинного Купола (напівсфера золотисто-червоної енергії, біля якої важчає повітря і глючить електроніка) та Кільцевої Безодні з піднятими мостами. Кожен перезапущений Маяк послаблює купол у своїй секції та дає коди до мостів[cite: 1, 2].',
+                    'Мешканці та Фінал': 'Елітні автоматони-охоронці (найсильніші в грі), голографічні «привиди» вавилонців та істоти Скверни. У фіналі гравці або підтримають Сіель, або змінять її стан[cite: 2].'
+                }
+            },
+            {
+                id: 'start_metro',
+                label: 'Точка Нуль: Вагон Метро',
+                title: 'Стартовий Вагон Метро (Мікро-хаб)',
+                type: 'start',
+                treePos: { x: 3320, y: 340 },
+                radialPos: { x: 2980, y: 2150 },
+                summary: 'Вагон сучасного метро, який після просторової турбулентності опинився у Секторі I майже впритул до межі Сектора 0[cite: 1, 2].',
+                meta: [
+                    ['Локація', 'Південна межа Сектора I біля Купола[cite: 1, 2]'],
+                    ['Функція', 'Стартовий прихисток, аптечка, табло[cite: 1]'],
+                    ['Апгрейд', 'Мобільна броньована база (ШІ Задкіїл)[cite: 1]']
+                ],
+                details: {
+                    'Зав\'язка партії': 'Герої їдуть у звичайному вагоні метро, стається просторова турбулентність, і вагон виринає посеред диких руїн Вавилонії на цілій станції метро[cite: 1, 2].',
+                    'Куди йти зі старту': 'Прямий шлях на південь до Сіель перекритий Карантинним Куполом, тому гравці вирушають на північ через зелені рівнини до Першого Маяка[cite: 1, 2].'
+                }
+            },
+
+            // --- РІВЕНЬ 1: 8 ЗОВНІШНІХ СЕКТОРІВ (I – VIII) ---
+            {
+                id: 'sec_1',
+                label: 'Сектор I (Північ)',
+                title: 'Карантинні Сади та Старі Естакади',
+                type: 'sector',
+                treePos: { x: 1320, y: 1080 },
+                radialPos: { x: 2980, y: 1780 },
+                summary: 'Стартовий сектор із м\'яким кліматом: хвилясті рівнини зі світною в сутінках травою, здичавілі ботанічні павільйони та опори монорейок[cite: 1, 2].',
+                meta: [
+                    ['Маяк сектора', 'Маяк I на обриві (ШІ Рафаїль)[cite: 1, 2]'],
+                    ['Мешканці', 'Травоїдні, світні комахи, роботи-садівники[cite: 2]'],
+                    ['Знахідки', 'Малі енергокамені, прості схеми, записи[cite: 2]']
+                ],
+                details: {
+                    'Ландшафт і Споруди': 'Хвилясті зелені рівнини, порізані зарослими каналами. Висока трава світиться в сутінках. Здичавілі оранжереї, лабораторії рослин, бетонні естакади та станція метро[cite: 1, 2].',
+                    'Небезпеки': 'Низькі. Головний ризик — забрести на південь впритул до Карантинного Купола Сектора 0[cite: 2].'
+                }
+            },
+            {
+                id: 'sec_2',
+                label: 'Сектор II (Північний Схід)',
+                title: 'Іржаві Пустки (Механічний Некрополь)',
+                type: 'sector',
+                treePos: { x: 1740, y: 1080 },
+                radialPos: { x: 3820, y: 2100 },
+                summary: 'Індустріальне кладовище: дюни з рудого металевого піску, траншеї конвеєрів та остови гігантських крокуючих фабрик[cite: 1, 2].',
+                meta: [
+                    ['Маяк сектора', 'Маяк II у металобрухті (ШІ Гавриїл)[cite: 1, 2]'],
+                    ['Мешканці', 'Автоматони-збирачі на маршрутах[cite: 1, 2]'],
+                    ['Небезпеки', 'Металеві піщані бурі, обвали траншей[cite: 2]']
+                ],
+                details: {
+                    'Ландшафт і Споруди': 'Рудий оксидний пісок і попіл, кабельні магістралі завтовшки з дерево, мобільні заводи, що застигли в пустелі, плавильні та склади запчастин[cite: 1, 2].',
+                    'Знахідки': 'Метал і деталі для крафту, вцілілі модулі роботів, нерозряджені енергетичні камені в корпусах фабрик[cite: 2].'
+                }
+            },
+            {
+                id: 'sec_3',
+                label: 'Сектор III (Схід)',
+                title: 'Кристалічні Солончаки та Ефірне Озеро',
+                type: 'sector',
+                treePos: { x: 2160, y: 1080 },
+                radialPos: { x: 4180, y: 2900 },
+                summary: 'Сліпуча біла соляна рівнина з лісами гострих Аура-кристалів, які резонують і гудуть на вітрі, наче орган[cite: 1, 2].',
+                meta: [
+                    ['Маяк сектора', 'Маяк III на узбережжі (ШІ Уріїл)[cite: 1, 2]'],
+                    ['Особливість', 'Ефірне Озеро в кратері енергоядра[cite: 1, 2]'],
+                    ['Мешканці', 'Кристалізовані звірі, вибухові шипи[cite: 1, 2]']
+                ],
+                details: {
+                    'Ефірне Озеро': 'Кругле озеро на південь від маяка — затоплений кратер старого енергоядра з густою світловою рідиною, що випромінює енергію і перевантажує електроніку[cite: 1, 2].',
+                    'Знахідки та Небезпеки': 'Сирі Аура-кристали для крафту й прокачки. Небезпека: кристальні шипи, що детонують від різкого звуку, та сліпуча спека від солі[cite: 2].'
+                }
+            },
+            {
+                id: 'sec_4',
+                label: 'Сектор IV (Південний Схід)',
+                title: 'Затока Застиглого Припливу',
+                type: 'sector',
+                treePos: { x: 2580, y: 1080 },
+                radialPos: { x: 3820, y: 3700 },
+                summary: 'Кораловий півострів і внутрішня затока, де через збій шлюзів раз на добу вода повністю відходить, оголюючи морське дно[cite: 1, 2].',
+                meta: [
+                    ['Маяк сектора', 'Маяк IV на мисі (ШІ Задкіїл)[cite: 1, 2]'],
+                    ['Механіка зони', 'Таймер відпливу (доступ до дна затоки)[cite: 1, 2]'],
+                    ['Мешканці', 'Світні корали, краби-броньовики, роботи[cite: 2]']
+                ],
+                details: {
+                    'Споруди та Дно затоки': 'Стародавні портові доки, хвилерізи, крани, а на дні затоки — затоплені куполи біолабораторій та біолюмінесцентні коралові ліси[cite: 1, 2].',
+                    'Знахідки та Небезпеки': 'Морські енергокамені, лабораторні записи з дна. Головний ризик — не встигнути повернутися на півострів до зворотної хвилі припливу[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'sec_5',
+                label: 'Сектор V (Південь)',
+                title: 'Примарний Мегаполіс (Туманні Руїни)',
+                type: 'sector',
+                treePos: { x: 3000, y: 1080 },
+                radialPos: { x: 2980, y: 4040 },
+                summary: 'Головне місто Вавилонії у сріблястому наномашинному тумані, який проектує у повітря фантомні голограми («ехо») жителів[cite: 1, 2].',
+                meta: [
+                    ['Маяк сектора', 'Головний шпиль Маяк V (ШІ Єреміїл)[cite: 1, 2]'],
+                    ['Мешканці', 'Хижаки-мімікри в ілюзіях, хранителі архівів[cite: 1, 2]'],
+                    ['Знахідки', 'Головні лор-архіви, схеми, енергокамені[cite: 2]']
+                ],
+                details: {
+                    'Ландшафт і Споруди': 'Бетонні джунглі з напівзруйнованих житлових веж, великих бібліотек, площ зі статуями та транспортних вузлів[cite: 1, 2].',
+                    'Небезпеки': 'Хижаки-мімікри копіюють голографічні фігури у тумані, щоб підкрастися впритул; автоматони-хранителі атакують тих, хто виносить знання[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'sec_6',
+                label: 'Сектор VI (Південний Захід)',
+                title: 'Грозові Топи та Гравітаційні Поля',
+                type: 'sector',
+                treePos: { x: 3420, y: 1080 },
+                radialPos: { x: 2140, y: 3700 },
+                summary: 'Затоплені мангрові болота, запах озону та зламана гравітація: у повітрі висять брили ґрунту, мости й громовідводи під блискавками[cite: 1, 2].',
+                meta: [
+                    ['Маяк сектора', 'Маяк VI на острові (ШІ Рагуїл)[cite: 1, 2]'],
+                    ['Мешканці', 'Електричні амфібії, ремонтники генераторів[cite: 2]'],
+                    ['Знахідки', 'Найактивніші грозові камені, граві-модулі[cite: 2]']
+                ],
+                details: {
+                    'Гравітація та Блискавки': 'Над водою і трясовиною плавають на різній висоті брили землі та старі громовідводи Вавилонії («сходи» для гравців), у які б\'ють фіолетові блискавки[cite: 1, 2].',
+                    'Небезпеки': 'Удари блискавок, зони з нульовою чи перевернутою гравітацією та топкі болота[cite: 2].'
+                }
+            },
+            {
+                id: 'sec_7',
+                label: 'Сектор VII (Захід)',
+                title: 'Ліс Великих Дерев (Двоярусна Біосфера)',
+                type: 'sector',
+                treePos: { x: 3840, y: 1080 },
+                radialPos: { x: 1760, y: 2900 },
+                summary: 'Монументальні дерева-титани замість гір: вічні сутінки зі світними грибами в корінні внизу та сонячний світ із біостанціями в кронах[cite: 1, 2].',
+                meta: [
+                    ['Маяк сектора', 'Живий Маяк VII у дереві (ШІ Варахіїл)[cite: 1, 2]'],
+                    ['Вертикаль', 'Вавилонські ліфти у стовбурах і ліани[cite: 1, 2]'],
+                    ['Мешканці', 'Наземні хижаки внизу, крилата фауна вгорі[cite: 1, 2]']
+                ],
+                details: {
+                    'Два світи сектора': '1) Нижній ярус: вологі сутінки між корінням завширшки з будинок, галюциногенні спори й грибниці. 2) Верхній ярус: сонячні гілки-мости та підвісні генетичні лабораторії Вавилонії[cite: 1, 2].',
+                    'Знахідки': 'Біоматеріали (смоли, спори, деревина), рідкісне насіння та записи про вирощування дерев-титанів[cite: 2].'
+                }
+            },
+            {
+                id: 'sec_8',
+                label: 'Сектор VIII (Північний Захід)',
+                title: 'Токсичні Джунглі Прориву (Біо-Шрами)',
+                type: 'sector',
+                treePos: { x: 4260, y: 1080 },
+                radialPos: { x: 2140, y: 2100 },
+                summary: 'Колишній аграрний сектор під червоним прогином Бар\'єра: пульсуючі хижі ліани, вибухові спорові квіти та кислотні болота[cite: 1, 2].',
+                meta: [
+                    ['Маяк сектора', 'Пошкоджений Маяк VIII (ШІ Метатрон)[cite: 1, 2]'],
+                    ['Мешканці', 'Рослини-хижаки, заражені роботи-фермери[cite: 2]'],
+                    ['Загроза', 'Найвища концентрація Скверни зовні[cite: 1, 2]']
+                ],
+                details: {
+                    'Контраст «було і стало»': 'Покинуті ферми, зрошувальні канали, зернові елеватори й теплиці, які колись годували весь острів, тепер обплутані агресивною мутованою флорою[cite: 1, 2].',
+                    'Знахідки та Небезпеки': 'Мутовані зразки для алхімії та крафту. Перебування без захисту поступово накопичує зараження Скверною[cite: 1, 2].'
+                }
+            },
+
+            // --- РІВЕНЬ 2: МЕРЕЖА 9 ШІ-АРХАНГЕЛІВ ---
+            {
+                id: 'ai_1',
+                label: 'Архангел I • РАФАЇЛЬ',
+                title: 'ШІ Рафаїль (Аналітика та Мова)',
+                type: 'ai',
+                treePos: { x: 1180, y: 1620 },
+                radialPos: { x: 2980, y: 1320 },
+                summary: 'Перший знайдений ШІ-наставник. Запускає дешифрування мови Вавилонії, біосканер флори/фауни та синтез антидотів[cite: 1, 2].',
+                meta: [
+                    ['Стан на старті', 'Пам\'ять стерта на 80%, відновлюється[cite: 1]'],
+                    ['Механіка 1', 'Контекстний словник мови Вавилонії[cite: 1]'],
+                    ['Механіка 2', 'Аналізатор трофеїв та медичний протокол[cite: 1]']
+                ],
+                details: {
+                    'Роль у партії': 'Стає «голосом у голові» гравців. Допомагає сканувати фрески й термінали, перекладаючи гліфи Вавилонії, та підказує слабкі місця звірів і токсичність рослин[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'ai_2',
+                label: 'Архангел II • ГАВРИЇЛ',
+                title: 'ШІ Гавриїл (Код та Автоматони)',
+                type: 'ai',
+                treePos: { x: 1580, y: 1620 },
+                radialPos: { x: 4280, y: 1750 },
+                summary: 'Керує фабриками Сектора II, говорить мовою інструкцій. Відкриває перепрограмування автоматонів і конструювання дронів[cite: 1, 2].',
+                meta: [
+                    ['Сфера', 'Комунікації, машинний код, заводи[cite: 1, 2]'],
+                    ['Механіка', 'Скрипти поведінки роботів через гліфи[cite: 1]']
+                ],
+                details: {
+                    'Перепрограмування роботів': 'Дозволяє складати команди зі слів, відкритих Рафаїлем (наприклад, «Захист + Вогонь» або «Транспорт + Ремонт»), перетворюючи роботів на союзників[cite: 1].'
+                }
+            },
+            {
+                id: 'ai_3',
+                label: 'Архангел III • УРІЇЛ',
+                title: 'ШІ Уріїл (Енергетика та Кристали)',
+                type: 'ai',
+                treePos: { x: 1980, y: 1620 },
+                radialPos: { x: 4680, y: 2900 },
+                summary: '«Співає» разом із кристалами Сектора III. Відкриває чисту огранку, комбінування стихій та вживлення Аура-кристалів[cite: 1, 2].',
+                meta: [
+                    ['Сфера', 'Енергетика, резонанс та синтез[cite: 1, 2]'],
+                    ['Механіка', 'Інтеграція кристалів у зброю та броню[cite: 1]']
+                ],
+                details: {
+                    'Прокачка через кристали': 'Доки Уріїла не знайдено, кристали працюють лише як батарейки чи гранати. Уріїл дозволяє безпечно вживлювати їх у спорядження та ядра роботів[cite: 1].'
+                }
+            },
+            {
+                id: 'ai_4',
+                label: 'Архангел IV • ЗАДКІЇЛ',
+                title: 'ШІ Задкіїл (Шлюзи та Логістика)',
+                type: 'ai',
+                treePos: { x: 2380, y: 1620 },
+                radialPos: { x: 4280, y: 4050 },
+                summary: 'Керує шлюзами Затоки Припливу, часом відпливу та стародавніми транспортними коліями Вавилонії[cite: 1, 2].',
+                meta: [
+                    ['Сфера', 'Гідрошлюзи, магістралі, логістика[cite: 1, 2]'],
+                    ['Механіка', 'Апгрейд вагона метро у мобільну базу[cite: 1]']
+                ],
+                details: {
+                    'Транспортна мережа': 'Може змінити графік припливу у Секторі IV за домовленістю з гравцями та запустити швидке переміщення між відкритими вежами[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'ai_5',
+                label: 'Архангел V • ЄРЕМІЇЛ',
+                title: 'ШІ Єреміїл (Архіви та Ехо Пам\'яті)',
+                type: 'ai',
+                treePos: { x: 2780, y: 1620 },
+                radialPos: { x: 2980, y: 4480 },
+                summary: 'Зберігає пам\'ять Примарного Мегаполіса. Реконструює голографічні записи останніх днів Вавилонії[cite: 1, 2].',
+                meta: [
+                    ['Сфера', 'Історичні архіви та голограми[cite: 1, 2]'],
+                    ['Механіка', 'Пошук сховищ, паролів і причин Скверни[cite: 1]']
+                ],
+                details: {
+                    'Голографічні реконструкції': 'Відсіює ілюзії мімікрів у наномашинному тумані та показує справжні події минулого Вавилонії[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'ai_6',
+                label: 'Архангел VI • РАГУЇЛ',
+                title: 'ШІ Рагуїл (Гравітація та Клімат)',
+                type: 'ai',
+                treePos: { x: 3180, y: 1620 },
+                radialPos: { x: 1680, y: 4050 },
+                summary: '«Нервовий» ШІ посеред Грозових Топів. Керує погодою, гравітаційними кишенями та прогнозує прориви Бар\'єра[cite: 1, 2].',
+                meta: [
+                    ['Сфера', 'Клімат-контроль та гео-моніторинг[cite: 1, 2]'],
+                    ['Механіка', 'Карта аномалій і попередження про прориви[cite: 1]']
+                ],
+                details: {
+                    'Особливість поведінки': 'Через розхитану гравітацію Сектора VI відповідає з перебоями, але дає гравцям точний радар гравітаційних пасток[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'ai_7',
+                label: 'Архангел VII • ВАРАХІЇЛ (Саріїл)',
+                title: 'ШІ Варахіїл (Біосфера та Приручення)',
+                type: 'ai',
+                treePos: { x: 3580, y: 1620 },
+                radialPos: { x: 1280, y: 2900 },
+                summary: 'Напівживий ШІ в найбільшому Дереві-титані. Відкриває глибоке приручення фауни та вирощування мутованих рослин[cite: 1, 2].',
+                meta: [
+                    ['Сфера', 'Екосистема Ковчега та генетика[cite: 1, 2]'],
+                    ['Механіка', 'Приручення звірів (частоти, нейролінзи)[cite: 1]']
+                ],
+                details: {
+                    'Характер і можливості': 'Говорить спокійно і повільно, як саме дерево. Дозволяє приручати хижаків і літаючих істот через феромони та звукові частоти[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'ai_8',
+                label: 'Архангел VIII • МЕТАТРОН (Камаїл)',
+                title: 'ШІ Метатрон (Печатка Бар\'єра)',
+                type: 'ai',
+                treePos: { x: 3980, y: 1620 },
+                radialPos: { x: 1680, y: 1750 },
+                summary: 'Частково спотворений Скверною ШІ у Секторі VIII. Дає захисні протоколи для входу в епіцентри зараження та ключі до Сіель[cite: 1, 2].',
+                meta: [
+                    ['Стан', 'Пошкоджений Скверною (жертва або ворог)[cite: 2]'],
+                    ['Механіка', 'Карантинний захист та ключі до Центру[cite: 1, 2]']
+                ],
+                details: {
+                    'Дилема гравців': 'Через ураження Скверною з ним потрібно поводитися максимально обережно, щоб очистити або перехопити протоколи захисту[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'ai_9',
+                label: 'Архангел IX • МИХАЇЛ',
+                title: 'ШІ Михаїл (Оборона та Артефакти)',
+                type: 'ai',
+                treePos: { x: 4380, y: 1620 },
+                radialPos: { x: 2420, y: 1420 },
+                summary: 'Військовий ШІ тактики та оборони. Знімає біометричні блокування зі стародавніх Артефактів, зброї та броні Вавилонії[cite: 1].',
+                meta: [
+                    ['Сфера', 'Оборона, тактика, військові модулі[cite: 1]'],
+                    ['Механіка', 'Активація Артефактів («мертвого металу»)[cite: 1]']
+                ],
+                details: {
+                    'Доступ до арсеналів': 'Без кодів Михаїла високотехнологічна зброя та броня Вавилонії заблоковані біометрією і не працюють у руках чужинців[cite: 1].'
+                }
+            },
+
+            // --- РІВЕНЬ 3: ГЛОБАЛЬНІ МЕХАНІКИ, ЗАГРОЗИ ТА СЕСІЇ ---
+            {
+                id: 'mech_lang',
+                label: 'Механіка • Лінгвістика Ковчега',
+                title: 'Мова Вавилонії та Скрипти Автоматонів',
+                type: 'mech',
+                treePos: { x: 1650, y: 2150 },
+                radialPos: { x: 3620, y: 1380 },
+                summary: 'Дешифрування стародавніх гліфів. Кожне відкрите слово («Енергія», «Захист», «Ремонт») стає кодом для програмування роботів[cite: 1].',
+                meta: [
+                    ['Джерела слів', 'Фрески, дорожні знаки, термінали[cite: 1]'],
+                    ['Синергія', 'Рафаїль (переклад) + Гавриїл (код)[cite: 1]']
+                ],
+                details: {
+                    'Як працює в грі': 'Гравці не просто читають лорні записки, а збирають із вивчених гліфів команди для перехоплення автоматонів і запуску інфраструктури[cite: 1].'
+                }
+            },
+            {
+                id: 'mech_crystals',
+                label: 'Механіка • Аура-Кристали',
+                title: 'Аура-кристали та Енергетичні Камені',
+                type: 'mech',
+                treePos: { x: 2180, y: 2150 },
+                radialPos: { x: 4720, y: 2320 },
+                summary: 'Конденсат енергії Ковчега для прокачки зброї, броні, здібностей персонажів (гравітація, щити, блискавки) і живлення роботів[cite: 1, 2].',
+                meta: [
+                    ['Чисті кристали', 'Огранка через ШІ Уріїла (Сектор III)[cite: 1, 2]'],
+                    ['Уражені кристали', 'Подвійна сила, але ризик мутації Скверною[cite: 1]']
+                ],
+                details: {
+                    'Види за секторами': 'Малі камені у Садах (Сектор I), сирі друзи у Солончаках (Сектор III), морські камені на дні Затоки (Сектор IV), грозові камені в Топах (Сектор VI)[cite: 2].'
+                }
+            },
+            {
+                id: 'mech_robots',
+                label: 'Механіка • Автоматони та Фауна',
+                title: 'Автоматони Вавилонії та Чужорідна Фауна',
+                type: 'mech',
+                treePos: { x: 2710, y: 2150 },
+                radialPos: { x: 4720, y: 3480 },
+                summary: 'Переналаштування роботів (садівники, збирачі, ремонтники, хранителі) та приручення звірів через частоти й біологію[cite: 1, 2].',
+                meta: [
+                    ['Автоматони', 'Від ворогів до бойових супутників і вантажників[cite: 1, 2]'],
+                    ['Приручення звірів', 'Через ШІ Варахіїла, кристали та плоди[cite: 1]']
+                ],
+                details: {
+                    'Роль у виживанні': 'Приручені істоти можуть відчувати наближення викидів Скверни або бачити невидимі гравітаційні та голографічні аномалії[cite: 1].'
+                }
+            },
+            {
+                id: 'threat_blight',
+                label: 'Головна Загроза • СКВЕРНА',
+                title: 'Скверна та Пробоїни Бар\'єра',
+                type: 'threat',
+                treePos: { x: 3240, y: 2150 },
+                radialPos: { x: 1220, y: 2220 },
+                summary: 'Руйнівна зовнішня сила, що сочиться крізь тріщини Бар\'єра, мутує живу природу й роботів та спотворює простір і час[cite: 1, 2].',
+                meta: [
+                    ['Епіцентри', 'Сектор VIII (Пн-Зх) та вежа Сіель (Сектор 0)[cite: 1, 2]'],
+                    ['Протидія', 'Антидоти Рафаїля та протоколи Метатрона[cite: 1, 2]']
+                ],
+                details: {
+                    'Симптоми у світі': 'Хижі пульсуючі ліани, автоматони, оброслі живою тканиною-плющем, уражені кристали та химери Скверни у центральному секторі[cite: 1, 2].'
+                }
+            },
+            {
+                id: 'session_0',
+                label: 'Хроніка Партії • Сесія #0',
+                title: 'Ініціалізація Кампанії «Ентропія»',
+                type: 'session',
+                treePos: { x: 3770, y: 2150 },
+                radialPos: { x: 2420, y: 1850 },
+                summary: 'Стартовий вузол хроніки гравців. Сюди підключатимуться логи з інтерактивної карти та розшифровки діалогів після кожної гри.',
+                meta: [
+                    ['Статус', 'Очікування старту у Вагоні Метро[cite: 1, 2]'],
+                    ['Перша ціль', 'Дістатися Маяка I та активувати Рафаїля[cite: 1, 2]']
+                ],
+                details: {
+                    'Як поповнювати хроніку': 'Натисніть «+ Записати Сесію» у верхній панелі або просто перетягніть файл history.json / .txt прямо на полотно Ірмінсуля.'
+                }
+            }
+        ];
+
+        const defaultEdges = [
+            // Ієрархія Ядра
+            { from: 'core_ark', to: 'sec_0', label: 'Центральне Ядро' },
+            { from: 'core_ark', to: 'start_metro', label: 'Точка падіння' },
+            { from: 'start_metro', to: 'sec_1', label: 'Вихід на північ' },
+            { from: 'start_metro', to: 'sec_0', label: 'Блоковано Куполом' },
+
+            // Ядро -> 8 Секторів
+            { from: 'sec_0', to: 'sec_1', label: 'Північний промінь' },
+            { from: 'sec_0', to: 'sec_2', label: 'Пн-Сх промінь' },
+            { from: 'sec_0', to: 'sec_3', label: 'Східний промінь' },
+            { from: 'sec_0', to: 'sec_4', label: 'Пд-Сх промінь' },
+            { from: 'sec_0', to: 'sec_5', label: 'Південний шлях' },
+            { from: 'sec_0', to: 'sec_6', label: 'Пд-Зх промінь' },
+            { from: 'sec_0', to: 'sec_7', label: 'Західний промінь' },
+            { from: 'sec_0', to: 'sec_8', label: 'Пн-Зх промінь' },
+
+            // 8 Секторів -> 9 Архангелів ШІ
+            { from: 'sec_1', to: 'ai_1', label: 'Маяк I' },
+            { from: 'sec_2', to: 'ai_2', label: 'Маяк II' },
+            { from: 'sec_3', to: 'ai_3', label: 'Маяк III' },
+            { from: 'sec_4', to: 'ai_4', label: 'Маяк IV' },
+            { from: 'sec_5', to: 'ai_5', label: 'Маяк V' },
+            { from: 'sec_6', to: 'ai_6', label: 'Маяк VI' },
+            { from: 'sec_7', to: 'ai_7', label: 'Маяк VII' },
+            { from: 'sec_8', to: 'ai_8', label: 'Маяк VIII' },
+            { from: 'sec_0', to: 'ai_9', label: 'Оборонний контур' },
+
+            // ШІ та Сектори -> Механіки, Скверна, Сесії
+            { from: 'ai_1', to: 'mech_lang', label: 'Дешифрує гліфи' },
+            { from: 'ai_2', to: 'mech_robots', label: 'Скрипти роботів' },
+            { from: 'mech_lang', to: 'mech_robots', label: 'Слова-команди' },
+            { from: 'ai_3', to: 'mech_crystals', label: 'Чиста огранка' },
+            { from: 'sec_3', to: 'mech_crystals', label: 'Друзи солончаків' },
+            { from: 'ai_7', to: 'mech_robots', label: 'Приручення фауни' },
+            { from: 'ai_4', to: 'start_metro', label: 'Апгрейд у базу' },
+            { from: 'sec_8', to: 'threat_blight', label: 'Прогин Бар\'єра' },
+            { from: 'ai_8', to: 'threat_blight', label: 'Захисні протоколи' },
+            { from: 'start_metro', to: 'session_0', label: 'Старт хроніки' }
+        ];
+
+        // =========================================================================
+        // 2. ІНІЦІАЛІЗАЦІЯ СТАНУ ТА ЗБЕРЕЖЕННЯ В LOCALSTORAGE
+        // =========================================================================
+        const STORAGE_KEY = 'irminsul_canvas_v2';
+        let state = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        if (!state || !state.nodes || state.nodes.length < 20) {
+            state = {
+                layout: 'tree',
+                nodes: JSON.parse(JSON.stringify(defaultNodes)).map(n => ({
+                    ...n,
+                    x: n.treePos.x,
+                    y: n.treePos.y
+                })),
+                edges: JSON.parse(JSON.stringify(defaultEdges))
+            };
+        }
+
+        let camX = 0, camY = 0, scale = 0.55;
+        let isPanning = false, panStartX = 0, panStartY = 0;
+        let draggedNode = null, dragOffX = 0, dragOffY = 0;
+        let selectedNodeId = null;
+        let portSourceId = null;
+
+        const viewport = document.getElementById('viewport');
+        const world = document.getElementById('world');
+        const groupsContainer = document.getElementById('groups-container');
+        const nodesContainer = document.getElementById('nodes-container');
+        const edgesLayer = document.getElementById('edges-layer');
+        const tempDragLine = document.getElementById('temp-drag-line');
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            document.getElementById('statusFooter').textContent =
+                `Ірмінсуль v2.0 • Вузлів: ${state.nodes.length} • Зв'язків: ${state.edges.length} • Потягніть за точку на краю картки, щоб створити нову гілку`;
+        }
+
+        function notify(text) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.style.display = 'block';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.style.display = 'none', 2600);
+        }
+
+        // =========================================================================
+        // 3. ВІДМАЛЬОВКА ГРУПОВИХ РАМОК ТА КАРТОК У СТИЛІ OBSIDIAN CANVAS
+        // =========================================================================
+        const colorByType = {
+            core: 'var(--c-core)',
+            start: 'var(--c-start)',
+            sector: 'var(--c-sector)',
+            ai: 'var(--c-ai)',
+            mech: 'var(--c-mech)',
+            threat: 'var(--c-threat)',
+            session: 'var(--c-session)'
+        };
+
+        function renderCanvas() {
+            renderGroupFrames();
+            renderCards();
+            renderAllEdges();
+            applyTransform();
+            saveToStorage();
+        }
+
+        function renderGroupFrames() {
+            groupsContainer.innerHTML = '';
+            if (state.layout === 'tree') {
+                const frames = [
+                    { title: 'Ковчег Вавилонія (Ядро Ірмінсуля)', x: 2460, y: 280, w: 1230, h: 610 },
+                    { title: 'Мережа Зовнішніх Секторів (I – VIII)', x: 1260, y: 1015, w: 3360, h: 350 },
+                    { title: 'Мережа 9 ШІ-Архангелів (Маяки Вавилонії)', x: 1120, y: 1555, w: 3620, h: 340 },
+                    { title: 'Ключові Механіки, Скверна та Історія Партії', x: 1590, y: 2085, w: 2550, h: 340 }
+                ];
+                frames.forEach(f => {
+                    const box = document.createElement('div');
+                    box.className = 'canvas-group-box';
+                    box.style.left = f.x + 'px';
+                    box.style.top = f.y + 'px';
+                    box.style.width = f.w + 'px';
+                    box.style.height = f.h + 'px';
+                    box.innerHTML = `<div class="canvas-group-title">${f.title}</div>`;
+                    groupsContainer.appendChild(box);
+                });
+            } else {
+                const frame = document.createElement('div');
+                frame.className = 'canvas-group-box';
+                frame.style.left = '1160px';
+                frame.style.top = '1220px';
+                frame.style.width = '3940px';
+                frame.style.height = '3550px';
+                frame.style.borderRadius = '28px';
+                frame.innerHTML = `<div class="canvas-group-title">Острів-Континент «Вавилонія» (Захисний Бар'єр Ковчега)</div>`;
+                groupsContainer.appendChild(frame);
+            }
+        }
+
+        function renderCards() {
+            nodesContainer.innerHTML = '';
+            state.nodes.forEach(node => {
+                const el = document.createElement('div');
+                el.className = 'canvas-node' + (node.id === selectedNodeId ? ' selected' : '');
+                el.id = 'card-' + node.id;
+                el.dataset.id = node.id;
+                el.dataset.type = node.type;
+                el.style.left = node.x + 'px';
+                el.style.top = node.y + 'px';
+
+                const metaHtml = (node.meta || []).map(([k, v]) =>
+                    `<li><strong>${stripCite(k)}</strong> — <span class="wiki-ref">${stripCite(v)}</span></li>`
+                ).join('');
+
+                el.innerHTML = `
+                    <div class="node-floating-label">
+                        <span class="node-type-dot" style="background:${colorByType[node.type] || '#38bdf8'}"></span>
+                        ${stripCite(node.label || node.title)}
+                    </div>
+                    <div class="port port-top" data-id="${node.id}"></div>
+                    <div class="port port-right" data-id="${node.id}"></div>
+                    <div class="port port-bottom" data-id="${node.id}"></div>
+                    <div class="port port-left" data-id="${node.id}"></div>
+                    <div class="node-inner-box">
+                        <div class="node-link-title">${stripCite(node.title)}</div>
+                        <div class="node-desc">${stripCite(node.summary)}</div>
+                        ${metaHtml ? `<ul class="node-meta-list">${metaHtml}</ul>` : ''}
+                    </div>
+                `;
+
+                // Перетягування картки
+                const innerBox = el.querySelector('.node-inner-box');
+                innerBox.addEventListener('mousedown', (e) => {
+                    if (e.button !== 0) return;
+                    e.stopPropagation();
+                    draggedNode = node;
+                    const wx = (e.clientX - 44 - camX) / scale;
+                    const wy = (e.clientY - 40 - camY) / scale;
+                    dragOffX = wx - node.x;
+                    dragOffY = wy - node.y;
+                });
+
+                // Клік для відкриття інспектора та підсвічування гілок
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectNode(node.id);
+                });
+
+                // Порти для ручного протягування ліній-коріння
+                el.querySelectorAll('.port').forEach(port => {
+                    port.addEventListener('mousedown', (e) => {
+                        e.stopPropagation();
+                        portSourceId = node.id;
+                        tempDragLine.style.display = 'block';
+                    });
+                    port.addEventListener('mouseup', (e) => {
+                        e.stopPropagation();
+                        if (portSourceId && portSourceId !== node.id) {
+                            const exists = state.edges.some(ed =>
+                                (ed.from === portSourceId && ed.to === node.id) ||
+                                (ed.from === node.id && ed.to === portSourceId)
+                            );
+                            if (!exists) {
+                                state.edges.push({ from: portSourceId, to: node.id, label: 'Зв\'язок' });
+                                notify('🌱 Нову гілку Ірмінсуля з\'єднано!');
+                            }
+                        }
+                        portSourceId = null;
+                        tempDragLine.style.display = 'none';
+                        renderAllEdges();
+                        saveToStorage();
+                    });
+                });
+
+                nodesContainer.appendChild(el);
+            });
+        }
+
+        // =========================================================================
+        // 4. ГЕНЕРАЦІЯ ФІГУРНИХ ЛІНІЙ ЗВ'ЯЗКУ (BEZIER CURVES ЗІ СТРІЛКАМИ)
+        // =========================================================================
+        function getCardPorts(node) {
+            const el = document.getElementById('card-' + node.id);
+            const w = el ? el.offsetWidth : 300;
+            const h = el ? el.offsetHeight : 190;
+            return {
+                top:    { x: node.x + w / 2, y: node.y,         dx: 0,  dy: -1 },
+                bottom: { x: node.x + w / 2, y: node.y + h,     dx: 0,  dy: 1  },
+                left:   { x: node.x,         y: node.y + h / 2, dx: -1, dy: 0  },
+                right:  { x: node.x + w,     y: node.y + h / 2, dx: 1,  dy: 0  }
+            };
+        }
+
+        function findOptimalPorts(n1, n2) {
+            const p1s = getCardPorts(n1);
+            const p2s = getCardPorts(n2);
+
+            // В ієрархічному режимі надаємо перевагу вертикальним лініям (як у референсі Obsidian Canvas)
+            if (state.layout === 'tree' && Math.abs(n2.y - n1.y) > 140) {
+                if (n2.y > n1.y) return [p1s.bottom, p2s.top];
+                return [p1s.top, p2s.bottom];
+            }
+
+            let minDist = Infinity;
+            let best = [p1s.bottom, p2s.top];
+            for (const k1 in p1s) {
+                for (const k2 in p2s) {
+                    const a = p1s[k1], b = p2s[k2];
+                    const d = Math.hypot(b.x - a.x, b.y - a.y);
+                    if (d < minDist) {
+                        minDist = d;
+                        best = [a, b];
+                    }
+                }
+            }
+            return best;
+        }
+
+        function renderAllEdges() {
+            edgesLayer.innerHTML = '';
+            const map = Object.fromEntries(state.nodes.map(n => [n.id, n]));
+
+            state.edges.forEach(edge => {
+                const n1 = map[edge.from];
+                const n2 = map[edge.to];
+                if (!n1 || !n2) return;
+
+                const [p1, p2] = findOptimalPorts(n1, n2);
+                const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                const tension = Math.min(180, Math.max(55, dist * 0.42));
+
+                const c1x = p1.x + p1.dx * tension;
+                const c1y = p1.y + p1.dy * tension;
+                const c2x = p2.x + p2.dx * tension;
+                const c2y = p2.y + p2.dy * tension;
+
+                const d = `M ${p1.x} ${p1.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+
+                const isActive = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+                const isDimmed = selectedNodeId && !isActive;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', d);
+                path.setAttribute('class', `edge-line ${isActive ? 'highlighted' : ''} ${isDimmed ? 'dimmed' : ''}`);
+                path.setAttribute('marker-end', isActive ? 'url(#arrow-active)' : 'url(#arrow)');
+                edgesLayer.appendChild(path);
+
+                const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pulse.setAttribute('d', d);
+                pulse.setAttribute('class', `edge-pulse ${isDimmed ? 'dimmed' : ''}`);
+                edgesLayer.appendChild(pulse);
+
+                if (edge.label && (isActive || state.layout === 'radial')) {
+                    const mx = 0.125 * p1.x + 0.375 * c1x + 0.375 * c2x + 0.125 * p2.x;
+                    const my = 0.125 * p1.y + 0.375 * c1y + 0.375 * c2y + 0.125 * p2.y;
+                    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    txt.setAttribute('x', mx);
+                    txt.setAttribute('y', my - 4);
+                    txt.setAttribute('class', 'edge-text');
+                    txt.textContent = stripCite(edge.label);
+                    edgesLayer.appendChild(txt);
+                }
+            });
+        }
+
+        // =========================================================================
+        // 5. КЕРУВАННЯ КАМЕРОЮ (PAN, ZOOM, DRAG & DROP ФАЙЛІВ НА ПОЛОТНО)
+        // =========================================================================
+        function applyTransform() {
+            world.style.transform = `translate(${camX}px, ${camY}px) scale(${scale})`;
+            viewport.style.backgroundPosition = `${camX}px ${camY}px`;
+            viewport.style.backgroundSize = `${24 * scale}px ${24 * scale}px`;
+        }
+
+        viewport.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.canvas-node')) return;
+            isPanning = true;
+            panStartX = e.clientX - camX;
+            panStartY = e.clientY - camY;
+            viewport.classList.add('panning');
+            selectedNodeId = null;
+            closeInspector();
+            refreshHighlightStates();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            const wx = (e.clientX - 44 - camX) / scale;
+            const wy = (e.clientY - 40 - camY) / scale;
+
+            if (isPanning) {
+                camX = e.clientX - panStartX;
+                camY = e.clientY - panStartY;
+                applyTransform();
+            } else if (draggedNode) {
+                draggedNode.x = Math.round(wx - dragOffX);
+                draggedNode.y = Math.round(wy - dragOffY);
+                const el = document.getElementById('card-' + draggedNode.id);
+                if (el) {
+                    el.style.left = draggedNode.x + 'px';
+                    el.style.top = draggedNode.y + 'px';
+                }
+                renderAllEdges();
+            } else if (portSourceId) {
+                const src = state.nodes.find(n => n.id === portSourceId);
+                if (src) {
+                    const p = getCardPorts(src).bottom;
+                    tempDragLine.setAttribute('d', `M ${p.x} ${p.y} L ${wx} ${wy}`);
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isPanning) {
+                isPanning = false;
+                viewport.classList.remove('panning');
+            }
+            if (draggedNode) {
+                draggedNode = null;
+                saveToStorage();
+            }
+            if (portSourceId) {
+                portSourceId = null;
+                tempDragLine.style.display = 'none';
+            }
+        });
+
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const factor = e.deltaY < 0 ? 1.1 : 0.9;
+            const nextScale = Math.min(1.6, Math.max(0.22, scale * factor));
+            const mx = e.clientX - 44;
+            const my = e.clientY - 40;
+            camX = mx - (mx - camX) * (nextScale / scale);
+            camY = my - (my - camY) * (nextScale / scale);
+            scale = nextScale;
+            applyTransform();
+        }, { passive: false });
+
+        function zoomBy(factor) {
+            const nextScale = Math.min(1.6, Math.max(0.22, scale * factor));
+            const cx = viewport.clientWidth / 2;
+            const cy = viewport.clientHeight / 2;
+            camX = cx - (cx - camX) * (nextScale / scale);
+            camY = cy - (cy - camY) * (nextScale / scale);
+            scale = nextScale;
+            applyTransform();
+        }
+
+        function resetCamera() {
+            if (state.layout === 'tree') {
+                scale = 0.42;
+                camX = viewport.clientWidth / 2 - 2950 * scale;
+                camY = 45 - 240 * scale;
+            } else {
+                scale = 0.36;
+                camX = viewport.clientWidth / 2 - 3000 * scale;
+                camY = viewport.clientHeight / 2 - 2900 * scale;
+            }
+            applyTransform();
+        }
+
+        // Drag & Drop файлів сесій прямо на полотно
+        viewport.addEventListener('dragover', (e) => e.preventDefault());
+        viewport.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (!file) return;
+            const wx = Math.round((e.clientX - 44 - camX) / scale);
+            const wy = Math.round((e.clientY - 40 - camY) / scale);
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const content = ev.target.result.slice(0, 1800);
+                const newId = 'session_' + Date.now();
+                state.nodes.push({
+                    id: newId,
+                    label: `Лог Сесії • ${file.name}`,
+                    title: `Запис сесії: ${file.name}`,
+                    type: 'session',
+                    x: wx - 150,
+                    y: wy - 60,
+                    summary: content.slice(0, 220) + (content.length > 220 ? '...' : ''),
+                    meta: [['Джерело', file.name], ['Дата', new Date().toLocaleDateString('uk-UA')]],
+                    details: { 'Повний вміст логу сесії': content }
+                });
+                state.edges.push({ from: 'session_0', to: newId, label: 'Нова сесія' });
+                renderCanvas();
+                selectNode(newId);
+                notify(`🎙️ Файл "${file.name}" перетворено на вузол Ірмінсуля!`);
+            };
+            reader.readAsText(file);
+        });
+
+        // =========================================================================
+        // 6. ПЕРЕМИКАННЯ РОЗКЛАДОК, ІНСПЕКТОР ТА МОДАЛЬНЕ ВІКНО
+        // =========================================================================
+        function setCanvasLayout(mode) {
+            state.layout = mode;
+            document.getElementById('btnTree').classList.toggle('active', mode === 'tree');
+            document.getElementById('btnRadial').classList.toggle('active', mode === 'radial');
+
+            const refMap = Object.fromEntries(defaultNodes.map(n => [n.id, n]));
+            state.nodes.forEach((n, idx) => {
+                const ref = refMap[n.id];
+                if (ref) {
+                    const pos = mode === 'tree' ? ref.treePos : ref.radialPos;
+                    n.x = pos.x;
+                    n.y = pos.y;
+                } else {
+                    n.x = 2900 + (idx % 5) * 340;
+                    n.y = mode === 'tree' ? 2550 : 3300;
+                }
+            });
+
+            renderCanvas();
+            resetCamera();
+            notify(mode === 'tree' ? '🌳 Ієрархічне Древо (Obsidian Canvas)' : '🕸️ Радіальна Паутина Острова Вавилонія');
+        }
+
+        function selectNode(nodeId) {
+            selectedNodeId = nodeId;
+            refreshHighlightStates();
+
+            const node = state.nodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            document.getElementById('insp-cat').textContent = stripCite(node.label || node.type);
+            document.getElementById('insp-title').textContent = stripCite(node.title);
+
+            let html = `
+                <div class="insp-section">
+                    <div class="insp-label">Огляд вузла</div>
+                    <div class="insp-text">${stripCite(node.summary)}</div>
+                </div>
+            `;
+
+            if (node.details) {
+                for (const [k, v] of Object.entries(node.details)) {
+                    html += `
+                        <div class="insp-section">
+                            <div class="insp-label">${stripCite(k)}</div>
+                            <div class="insp-text">${stripCite(v)}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            const rel = state.edges.filter(e => e.from === nodeId || e.to === nodeId);
+            if (rel.length) {
+                html += `<div class="insp-section"><div class="insp-label">Пов'язані вузли (${rel.length})</div>`;
+                rel.forEach(e => {
+                    const otherId = e.from === nodeId ? e.to : e.from;
+                    const other = state.nodes.find(n => n.id === otherId);
+                    if (other) {
+                        html += `<div style="padding:5px 0; border-bottom:1px solid #222632; font-size:0.8rem; cursor:pointer; color:var(--link-cyan);" onclick="focusOnNode('${other.id}')">
+                            → ${stripCite(other.title)} <span style="color:var(--text-muted); font-size:0.72rem;">(${stripCite(e.label || 'гілка')})</span>
+                        </div>`;
+                    }
+                });
+                html += `</div>`;
+            }
+
+            document.getElementById('insp-content').innerHTML = html;
+            document.getElementById('inspector').classList.add('open');
+        }
+
+        function closeInspector() {
+            document.getElementById('inspector').classList.remove('open');
+        }
+
+        function refreshHighlightStates() {
+            const linked = new Set([selectedNodeId]);
+            state.edges.forEach(e => {
+                if (e.from === selectedNodeId) linked.add(e.to);
+                if (e.to === selectedNodeId) linked.add(e.from);
+            });
+
+            document.querySelectorAll('.canvas-node').forEach(el => {
+                const id = el.dataset.id;
+                el.classList.toggle('selected', id === selectedNodeId);
+                el.classList.toggle('dimmed', selectedNodeId && !linked.has(id));
+            });
+            renderAllEdges();
+        }
+
+        function focusOnNode(nodeId) {
+            const n = state.nodes.find(x => x.id === nodeId);
+            if (!n) return;
+            scale = 0.85;
+            camX = viewport.clientWidth / 2 - (n.x + 150) * scale;
+            camY = viewport.clientHeight / 2 - (n.y + 95) * scale;
+            applyTransform();
+            selectNode(nodeId);
+        }
+
+        function filterNodes(type, btn) {
+            document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedNodeId = null;
+            closeInspector();
+
+            document.querySelectorAll('.canvas-node').forEach(el => {
+                const match = type === 'all' || el.dataset.type === type || (type === 'mech' && el.dataset.type === 'threat');
+                el.classList.toggle('dimmed', !match);
+            });
+        }
+
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            const q = e.target.value.trim().toLowerCase();
+            document.querySelectorAll('.canvas-node').forEach(el => {
+                const n = state.nodes.find(x => x.id === el.dataset.id);
+                const hay = (n.title + ' ' + n.label + ' ' + n.summary + ' ' + JSON.stringify(n.details || {})).toLowerCase();
+                el.classList.toggle('dimmed', q.length > 0 && !hay.includes(q));
+            });
+        });
+
+        function openModal(mode) {
+            const sel = document.getElementById('inpParent');
+            sel.innerHTML = state.nodes.map(n => `<option value="${n.id}">${stripCite(n.label || n.title)}</option>`).join('');
+            if (mode === 'session') {
+                document.getElementById('modalHeading').textContent = '🎙️ Додати Запис Ігрової Сесії в Ірмінсуль';
+                document.getElementById('inpType').value = 'session';
+                document.getElementById('inpParent').value = 'session_0';
+                document.getElementById('inpTitle').value = `Сесія #${state.nodes.filter(n => n.type === 'session').length}: Хроніка Ковчега`;
+            } else {
+                document.getElementById('modalHeading').textContent = '➕ Створити Новий Вузол на Полотні';
+                document.getElementById('inpType').value = 'sector';
+                document.getElementById('inpTitle').value = '';
+            }
+            document.getElementById('inpSummary').value = '';
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        function readLogFile(ev) {
+            const f = ev.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = (e) => {
+                document.getElementById('inpSummary').value = e.target.result.slice(0, 2000);
+                notify(`📄 Лог "${f.name}" завантажено у форму`);
+            };
+            r.readAsText(f);
+        }
+
+        function createNodeFromModal() {
+            const title = document.getElementById('inpTitle').value.trim() || 'Новий вузол Ірмінсуля';
+            const type = document.getElementById('inpType').value;
+            const parentId = document.getElementById('inpParent').value;
+            const summary = document.getElementById('inpSummary').value.trim() || 'Додано майстром кампанії.';
+
+            const parent = state.nodes.find(n => n.id === parentId) || state.nodes[0];
+            const id = 'custom_' + Date.now();
+
+            state.nodes.push({
+                id,
+                label: type === 'session' ? 'Хроніка Партії' : 'Вузол Ірмінсуля',
+                title,
+                type,
+                x: parent.x + (Math.random() * 240 - 120),
+                y: parent.y + 270,
+                summary: summary.slice(0, 220),
+                meta: [['Дата запису', new Date().toLocaleDateString('uk-UA')]],
+                details: { 'Повний запис': summary }
+            });
+            state.edges.push({ from: parentId, to: id, label: 'Гілка історії' });
+
+            closeModal();
+            renderCanvas();
+            focusOnNode(id);
+            notify('🌱 Вузол успішно додано в Ірмінсуль!');
+        }
+
+        function exportDatabase() {
+            const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const a = document.createElement('a');
+            a.href = str;
+            a.download = 'irminsul_entropy_canvas.json';
+            a.click();
+            notify('💾 Файл irminsul_entropy_canvas.json збережено!');
+        }
+
+        function resetToDefaultLore() {
+            if (!confirm('Скинути полотно до базової структури блокнота «Ентропія»?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+
+        window.addEventListener('load', () => {
+            renderCanvas();
+            resetCamera();
+        });
+    </script>
+</body>
+</html>
