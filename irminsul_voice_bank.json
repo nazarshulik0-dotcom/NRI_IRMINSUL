@@ -1,0 +1,63 @@
+{
+  "schema_version": "2.0-irminsul-voice-dna",
+  "updated_at": "2026-11-13",
+  "profiles": {
+    "raphael_archangel_1": {
+      "id": "raphael_archangel_1",
+      "title": "Рафаїль // Вежа Архангела I (Cloned DNA)",
+      "carrier_voice": "uk-UA-OstapNeural",
+      "pitch_ratio": 0.85,
+      "dna_vector": [
+        96.7,
+        null,
+        null,
+        null,
+        null,
+        -6.5,
+        -5.44,
+        0.24,
+        0.36,
+        1.38
+      ],
+      "samples": {}
+    },
+    "manas_raphael_9": {
+      "id": "manas_raphael_9",
+      "title": "Манас Рафаїль // Синтез 9/9 Маяків",
+      "carrier_voice": "uk-UA-OstapNeural",
+      "pitch_ratio": 0.91,
+      "dna_vector": [
+        104,
+        5.1,
+        3,
+        -1.4,
+        3.8,
+        2.5,
+        -0.8,
+        0.28,
+        0.44,
+        1.4
+      ],
+      "samples": {}
+    },
+    "ciel_core_0": {
+      "id": "ciel_core_0",
+      "title": "Ядро Сіель // Сектор 0 (Канон Tensura)",
+      "carrier_voice": "uk-UA-PolinaNeural",
+      "pitch_ratio": 0.97,
+      "dna_vector": [
+        188,
+        1.8,
+        2.4,
+        -1.2,
+        3.6,
+        2.8,
+        1.2,
+        0.08,
+        0.3,
+        1.2
+      ],
+      "samples": {}
+    }
+  }
+}
