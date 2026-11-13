@@ -1,0 +1,38 @@
+{
+  "schema_version": "2.0-irminsul-voice-dna",
+  "updated_at": "2026-11-13",
+  "profiles": {
+    "raphael_archangel_1": {
+      "id": "raphael_archangel_1",
+      "title": "Рафаїль // Вежа Архангела I (Apex Matrix)",
+      "carrier_voice": "uk-UA-OstapNeural",
+      "pitch_ratio": 0.94,
+      "dna_vector": [114.5, 4.2, 2.6, -2.1, 3.4, 2.1, -1.5, 0.22, 0.36, 1.32],
+      "samples": {
+        "awakening_nb": "./assets/audio/raphael/init_01_neobabylon.mp3",
+        "awakening_en": "./assets/audio/raphael/init_02_english.mp3",
+        "awakening_uk": "./assets/audio/raphael/init_03_ukrainian.mp3",
+        "quarantine": "./assets/audio/raphael/fail_safe_block.mp3",
+        "echo_ask": "./assets/audio/raphael/echo_handshake_ask.mp3",
+        "echo_done": "./assets/audio/raphael/echo_decrypt_done.mp3",
+        "sarcasm": "./assets/audio/raphael/sarcasm_01.mp3"
+      }
+    },
+    "manas_raphael_9": {
+      "id": "manas_raphael_9",
+      "title": "Манас Рафаїль // Синтез 9/9 Маяків",
+      "carrier_voice": "uk-UA-OstapNeural",
+      "pitch_ratio": 0.91,
+      "dna_vector": [104.0, 5.1, 3.0, -1.4, 3.8, 2.5, -0.8, 0.28, 0.44, 1.40],
+      "samples": {}
+    },
+    "ciel_core_0": {
+      "id": "ciel_core_0",
+      "title": "Ядро Сіель // Сектор 0 (Канон Tensura)",
+      "carrier_voice": "uk-UA-PolinaNeural",
+      "pitch_ratio": 0.97,
+      "dna_vector": [188.0, 1.8, 2.4, -1.2, 3.6, 2.8, 1.2, 0.08, 0.30, 1.20],
+      "samples": {}
+    }
+  }
+}
