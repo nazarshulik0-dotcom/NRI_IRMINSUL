@@ -14,9 +14,9 @@
       --accent-secondary: #ffd54f;
       --danger-glow: #ff4081;
       --archangel-glow: #b388ff;
-      --border-alpha: rgba(0, 230, 118, 0.40); /* Контраст рамок: 40% */
+      --border-alpha: rgba(0, 230, 118, 0.40);
       --border-gold: rgba(255, 213, 79, 0.45);
-      --glass-blur: blur(3px); /* Скло (Blur): 3px */
+      --glass-blur: blur(3px);
       --text-main: #e6fff2;
       --text-muted: #7ab398;
     }
@@ -72,7 +72,7 @@
     .brand-cluster {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand-title {
@@ -90,6 +90,16 @@
       border: 1px solid var(--border-gold);
       color: var(--accent-secondary);
       background: rgba(255, 213, 79, 0.08);
+      font-family: monospace;
+    }
+
+    .anchor-pill {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      border: 1px solid var(--border-alpha);
+      color: var(--accent-main);
+      background: rgba(0, 230, 118, 0.08);
       font-family: monospace;
     }
 
@@ -136,7 +146,7 @@
       box-shadow: 0 0 14px rgba(255, 213, 79, 0.55);
     }
 
-    /* 1. Перемикач геометрії: left-rail (x: -2, y: 69 з креслення) */
+    /* 1. Перемикач геометрії: left-rail */
     #ui-geometry-bar {
       position: fixed;
       left: 0;
@@ -163,7 +173,7 @@
       margin-bottom: 2px;
     }
 
-    /* 2. Термінал Архітектора Сіель: floating-window (x: 206, y: 74 з креслення) */
+    /* 2. Термінал Архітектора Сіель: floating-window */
     #ui-ciel-terminal {
       position: fixed;
       left: 206px;
@@ -217,7 +227,7 @@
       font-weight: 700;
     }
 
-    /* Візуалізатор Сфери Частинок та Коду Сіель (JARVIS / Великий Мудрець) */
+    /* Візуалізатор Сфери Частинок та Коду Сіель */
     .ciel-sphere-stage {
       position: relative;
       height: 138px;
@@ -315,10 +325,10 @@
       gap: 6px;
     }
 
-    /* 3. Інспектор Вузла: node-popover (контекстне спливаюче вікно біля вузла) */
+    /* 3. Інспектор Вузла: node-popover (прив'язаний до обраної точки масштабування) */
     #ui-node-popover {
       position: fixed;
-      width: 310px;
+      width: 315px;
       background: rgba(4, 18, 13, 0.94);
       border: 1px solid var(--accent-main);
       border-radius: 8px;
@@ -449,10 +459,11 @@
     <div class="brand-cluster">
       <span class="brand-title">❖ ІРМІНСУЛЬ // ЯДРО СІЕЛЬ</span>
       <span id="wasm-status-badge" class="wasm-pill">ЯДРО: ІНІЦІАЛІЗАЦІЯ...</span>
+      <span id="zoom-anchor-badge" class="anchor-pill">⌖ ТОЧКА ЗУМУ: СЕКТОР 0 (СІЕЛЬ)</span>
     </div>
 
     <div class="hud-actions">
-      <input type="text" id="global-search" placeholder="Пошук у коренях Ірмінсуля..." style="width:210px;" />
+      <input type="text" id="global-search" placeholder="Пошук у коренях Ірмінсуля..." style="width:200px;" />
       <button id="btn-toggle-ciel" class="gold">◉ Термінал Сіель</button>
       <button id="btn-toggle-beacons">✦ Маяки Архангелів [Приховано]</button>
       <button id="btn-role-switch" class="gold active">Доступ: МАЙСТЕР</button>
@@ -548,11 +559,12 @@
         <div id="pop-title" class="popover-title">Назва вузла</div>
         <div id="pop-meta" class="popover-meta">ID: sec_0 | Сектор 0</div>
       </div>
-      <button id="btn-close-popover" class="popover-close">✕</button>
+      <button id="btn-close-popover" class="popover-close" title="Скинути фокус зуму на Сектор 0">✕</button>
     </div>
     <div id="pop-summary" class="popover-summary">Опис вузла...</div>
     <div class="row">
-      <button id="btn-pop-toggle-lock" class="gold" style="flex:1;">🔓 Зняти карантин Сіель</button>
+      <button id="btn-pop-focus-center" style="flex:1;" title="Плавно підтягнути вузол у центр екрана">⌖ У центр</button>
+      <button id="btn-pop-toggle-lock" class="gold" style="flex:1;">🔓 Карантин</button>
     </div>
   </div>
 
@@ -586,23 +598,65 @@
     let core = null;
     let cielAgent = null;
     let isMaster = true;
-    let currentLayout = 'Hex'; // Стартова геометрія за кресленням
+    let currentLayout = 'Hex';
     let graphState = { raphael_state: 'Dormant', nodes: [], edges: [] };
     let selectedNode = null;
     let searchFilter = '';
 
-    // Камера полотна (центрована на Секторі 0 -> 3000, 3000)
-    let camera = { x: 0, y: 0, zoom: 0.78, dragging: false, lastX: 0, lastY: 0 };
+    // Камера полотна та активний якір масштабування (за замовчуванням — Сектор 0: 3000, 3000)
+    let camera = {
+      x: 0,
+      y: 0,
+      zoom: 0.78,
+      dragging: false,
+      lastX: 0,
+      lastY: 0,
+      targetX: null,
+      targetY: null
+    };
 
-    // 1. МАТЕМАТИКА 3D-СФЕРИ ЧАСТИНОК І КОДУ СІЕЛЬ (Стиль JARVIS + Великий Мудрець)
+    // Поточна точка масштабування (Центральне Ядро або обраний підпункт)
+    function getActiveZoomAnchor() {
+      if (selectedNode) {
+        const liveSelected = graphState.nodes.find(n => n.id === selectedNode.id);
+        if (liveSelected) return liveSelected;
+      }
+      const coreNode = graphState.nodes.find(n => n.id === 'sec_0');
+      return coreNode || { id: 'sec_0', title: 'Сектор 0: Цитадель СІЕЛЬ', x: 3000, y: 3000 };
+    }
+
+    function updateZoomAnchorBadge() {
+      const anchor = getActiveZoomAnchor();
+      const badge = document.getElementById('zoom-anchor-badge');
+      badge.textContent = `⌖ ТОЧКА ЗУМУ: ${anchor.title.toUpperCase()}`;
+      badge.style.borderColor = (anchor.id === 'sec_0') ? 'rgba(255, 213, 79, 0.55)' : 'rgba(0, 230, 118, 0.65)';
+      badge.style.color = (anchor.id === 'sec_0') ? '#ffd54f' : '#00e676';
+    }
+
+    // Прив'язка позиції картки інфо (node-popover) до екранних координат обраного вузла
+    function syncPopoverScreenPosition() {
+      const pop = document.getElementById('ui-node-popover');
+      if (!selectedNode || pop.style.display === 'none') return;
+
+      const liveNode = graphState.nodes.find(n => n.id === selectedNode.id) || selectedNode;
+      const screenX = camera.x + liveNode.x * camera.zoom;
+      const screenY = camera.y + liveNode.y * camera.zoom;
+      const offsetRadius = (liveNode.id === 'sec_0' ? 52 : 30) * camera.zoom;
+
+      const clampedX = Math.min(window.innerWidth - 330, Math.max(16, screenX + offsetRadius + 12));
+      const clampedY = Math.min(window.innerHeight - 240, Math.max(60, screenY - 40));
+
+      pop.style.left = `${clampedX}px`;
+      pop.style.top = `${clampedY}px`;
+    }
+
+    // 1. МАТЕМАТИКА 3D-СФЕРИ ЧАСТИНОК І КОДУ СІЕЛЬ (JARVIS + Великий Мудрець)
     const PARTICLE_COUNT = 165;
     const CODE_GLYPHS = ['0', '1', '❖', '◈', '∑', 'λ', 'Ω', 'S0', 'Ξ', 'Δ'];
     const sphereParticles = [];
     const deepSpaceStars = [];
-    let orbPhase = 0;
     let orbEnergyPulse = 0;
 
-    // Ініціалізація сфери Фібоначчі для рівномірного 3D-розподілу частинок
     const goldenAngle = Math.PI * (3 - Math.sqrt(5));
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const y = 1 - (i / (PARTICLE_COUNT - 1)) * 2;
@@ -618,7 +672,6 @@
       });
     }
 
-    // Deep-space фоновий пил Ірмінсуля
     for (let i = 0; i < 110; i++) {
       deepSpaceStars.push({
         x: Math.random() * 2400,
@@ -632,7 +685,6 @@
       orbEnergyPulse = 1.0;
     }
 
-    // Функція малювання 3D-сфери Сіель (використовується і в Терміналі, і в Секторі 0 на графі)
     function renderCielParticleSphere(targetCtx, cx, cy, baseRadius, timeSec, showCodeGlyphs = true) {
       targetCtx.save();
       targetCtx.translate(cx, cy);
@@ -640,7 +692,6 @@
       const pulseBoost = 1 + orbEnergyPulse * 0.22 * Math.sin(timeSec * 18);
       const R = baseRadius * pulseBoost;
 
-      // Зовнішній біо-смарагдовий та золотий ореол
       const halo = targetCtx.createRadialGradient(0, 0, R * 0.15, 0, 0, R * 1.45);
       halo.addColorStop(0, 'rgba(255, 213, 79, 0.28)');
       halo.addColorStop(0.55, 'rgba(0, 230, 118, 0.14)');
@@ -650,7 +701,7 @@
       targetCtx.arc(0, 0, R * 1.45, 0, Math.PI * 2);
       targetCtx.fill();
 
-      // Внутрішня священна геометрія «Великого Мудреця» (обертова октаграма-решітка)
+      // Внутрішня геометрія «Великого Мудреця»
       targetCtx.save();
       targetCtx.rotate(timeSec * 0.35);
       targetCtx.strokeStyle = 'rgba(255, 213, 79, 0.32)';
@@ -681,7 +732,6 @@
       targetCtx.stroke();
       targetCtx.restore();
 
-      // 3D-обертання частинок та кодових вузлів сфери
       const rotY = timeSec * (0.75 + orbEnergyPulse * 1.8);
       const rotX = Math.sin(timeSec * 0.4) * 0.45;
       const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
@@ -689,7 +739,6 @@
 
       const projected = [];
       for (const p of sphereParticles) {
-        // Обертання навколо осі Y та X
         const x1 = p.bx * cosY - p.bz * sinY;
         const z1 = p.bz * cosY + p.bx * sinY;
         const y2 = p.by * cosX - z1 * sinX;
@@ -705,10 +754,8 @@
         });
       }
 
-      // Сортування за глибиною Z
       projected.sort((a, b) => a.z - b.z);
 
-      // Тонкі нейронні нитки між близькими частинками на передній півкулі
       targetCtx.lineWidth = 0.65;
       for (let i = 0; i < projected.length; i += 3) {
         const a = projected[i];
@@ -726,7 +773,6 @@
         }
       }
 
-      // Відмальовка частинок і мікро-символів коду
       for (const item of projected) {
         const alpha = Math.max(0.15, (item.z + 1.2) / 2.2);
         const color = item.p.isGold
@@ -749,7 +795,6 @@
       targetCtx.restore();
     }
 
-    // Допоміжна функція малювання гексагона (nodeShape: hexagon)
     function drawHexagonPath(targetCtx, x, y, radius) {
       targetCtx.beginPath();
       for (let i = 0; i < 6; i++) {
@@ -762,7 +807,6 @@
       targetCtx.closePath();
     }
 
-    // Допоміжна функція малювання органічної кривої Безьє (edgeStyle: bezier-organic)
     function drawOrganicRootEdge(targetCtx, x1, y1, x2, y2, isHighlighted, timeSec) {
       const mx = (x1 + x2) / 2;
       const my = (y1 + y2) / 2;
@@ -780,7 +824,6 @@
       targetCtx.lineWidth = isHighlighted ? 3.2 : 1.8;
       targetCtx.stroke();
 
-      // Біо-імпульс вздовж кореня Ірмінсуля
       const t = (timeSec * 0.38 + (x1 + y1) * 0.001) % 1;
       const invT = 1 - t;
       const px = invT * invT * x1 + 2 * invT * t * (mx + normalX) + t * t * x2;
@@ -792,15 +835,42 @@
       targetCtx.fill();
     }
 
-    // Головний цикл анімації (60 FPS)
+    // Візуальний приціл активної Точки Масштабування
+    function drawZoomAnchorReticle(targetCtx, anchorNode, timeSec) {
+      const r = (anchorNode.id === 'sec_0') ? 56 : 33;
+      targetCtx.save();
+      targetCtx.translate(anchorNode.x, anchorNode.y);
+      targetCtx.rotate(-timeSec * 0.6);
+      targetCtx.strokeStyle = (anchorNode.id === 'sec_0')
+        ? 'rgba(255, 213, 79, 0.55)'
+        : 'rgba(0, 230, 118, 0.75)';
+      targetCtx.lineWidth = 1.6;
+      targetCtx.setLineDash([7, 6]);
+      targetCtx.beginPath();
+      targetCtx.arc(0, 0, r, 0, Math.PI * 2);
+      targetCtx.stroke();
+      targetCtx.restore();
+    }
+
     function animate(timestamp) {
       const timeSec = timestamp * 0.001;
-      orbPhase = timeSec;
       if (orbEnergyPulse > 0) {
         orbEnergyPulse = Math.max(0, orbEnergyPulse - 0.018);
       }
 
-      // 1. Рендер сфери у шапці плаваючого термінала Сіель
+      // Плавне підтягування камери до обраної точки (якщо активовано центрування)
+      if (camera.targetX !== null && camera.targetY !== null && !camera.dragging) {
+        camera.x += (camera.targetX - camera.x) * 0.14;
+        camera.y += (camera.targetY - camera.y) * 0.14;
+        if (Math.hypot(camera.targetX - camera.x, camera.targetY - camera.y) < 0.8) {
+          camera.x = camera.targetX;
+          camera.y = camera.targetY;
+          camera.targetX = null;
+          camera.targetY = null;
+        }
+        syncPopoverScreenPosition();
+      }
+
       if (orbCanvas.width !== orbCanvas.clientWidth || orbCanvas.height !== orbCanvas.clientHeight) {
         orbCanvas.width = orbCanvas.clientWidth || 380;
         orbCanvas.height = orbCanvas.clientHeight || 138;
@@ -808,10 +878,8 @@
       orbCtx.clearRect(0, 0, orbCanvas.width, orbCanvas.height);
       renderCielParticleSphere(orbCtx, orbCanvas.width / 2, orbCanvas.height / 2, 46, timeSec, true);
 
-      // 2. Рендер головного полотна Ірмінсуля (Deep-Space + Гексагони + Сфера Сектора 0)
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Фоновий зоряний пил deep-space
       for (const st of deepSpaceStars) {
         ctx.fillStyle = `rgba(0, 230, 118, ${st.alpha})`;
         ctx.beginPath();
@@ -823,7 +891,6 @@
       ctx.translate(camera.x, camera.y);
       ctx.scale(camera.zoom, camera.zoom);
 
-      // Фонова гексагональна або радіальна аура навколо Сектора 0 (3000, 3000)
       [210, 420, 640].forEach((r, idx) => {
         drawHexagonPath(ctx, 3000, 3000, r);
         ctx.strokeStyle = idx === 0 ? 'rgba(255, 213, 79, 0.16)' : 'rgba(0, 230, 118, 0.07)';
@@ -834,7 +901,6 @@
       const nodeMap = {};
       graphState.nodes.forEach(n => { nodeMap[n.id] = n; });
 
-      // Органічні лінії-корені Безьє
       graphState.edges.forEach(edge => {
         const n1 = nodeMap[edge.from];
         const n2 = nodeMap[edge.to];
@@ -843,7 +909,12 @@
         drawOrganicRootEdge(ctx, n1.x, n1.y, n2.x, n2.y, highlighted, timeSec);
       });
 
-      // Вузли графа
+      // Кільце-маркер активної Точки Масштабування
+      const activeAnchor = getActiveZoomAnchor();
+      if (activeAnchor) {
+        drawZoomAnchorReticle(ctx, activeAnchor, timeSec);
+      }
+
       graphState.nodes.forEach(node => {
         const matchesSearch = !searchFilter ||
           node.title.toLowerCase().includes(searchFilter) ||
@@ -854,7 +925,6 @@
         const isSelected = selectedNode && selectedNode.id === node.id;
 
         if (node.id === 'sec_0' || node.category === 'core') {
-          // Центральний вузол Сіель — жива 3D-сфера частинок і коду
           renderCielParticleSphere(ctx, node.x, node.y, 44, timeSec, false);
         } else {
           let strokeColor = '#00e676';
@@ -882,7 +952,6 @@
           ctx.stroke();
         }
 
-        // Підпис вузла
         ctx.font = (isSelected || node.id === 'sec_0') ? 'bold 13px Segoe UI, monospace' : '12px Segoe UI, monospace';
         ctx.fillStyle = node.id === 'sec_0' ? '#ffd54f' : '#e6fff2';
         ctx.textAlign = 'center';
@@ -898,12 +967,24 @@
     function resizeViewport() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      syncPopoverScreenPosition();
+    }
+
+    // Плавне центрування на будь-якому вузлі (за замовчуванням — на Секторі 0)
+    function focusCameraOnNode(node, resetZoom = false) {
+      if (resetZoom) camera.zoom = 0.82;
+      camera.targetX = canvas.width / 2 - node.x * camera.zoom;
+      camera.targetY = canvas.height / 2 - node.y * camera.zoom;
+      updateZoomAnchorBadge();
     }
 
     function centerOnCiel() {
+      selectedNode = graphState.nodes.find(n => n.id === 'sec_0') || null;
+      const anchor = getActiveZoomAnchor();
       camera.zoom = 0.82;
-      camera.x = canvas.width / 2 - 3000 * camera.zoom;
-      camera.y = canvas.height / 2 - 3000 * camera.zoom;
+      camera.targetX = canvas.width / 2 - anchor.x * camera.zoom;
+      camera.targetY = canvas.height / 2 - anchor.y * camera.zoom;
+      updateZoomAnchorBadge();
     }
 
     function refreshAllViews() {
@@ -913,30 +994,32 @@
         `WASM HEX // ВУЗЛІВ: ${graphState.nodes.length} | РАФАЇЛЬ: ${graphState.raphael_state.toUpperCase()}`;
       document.getElementById('raphael-state-pill').textContent = graphState.raphael_state.toUpperCase();
       document.getElementById('ciel-rag-box').textContent = core.buildCielRagPrompt();
+      updateZoomAnchorBadge();
+      syncPopoverScreenPosition();
     }
 
-    // Відкриття контекстного node-popover біля клікнутого вузла
-    function openNodePopover(node, screenX, screenY) {
+    function openNodePopover(node) {
       selectedNode = node;
+      updateZoomAnchorBadge();
+
       const pop = document.getElementById('ui-node-popover');
       pop.style.display = 'flex';
-      pop.style.left = `${Math.min(window.innerWidth - 330, Math.max(16, screenX + 18))}px`;
-      pop.style.top = `${Math.min(window.innerHeight - 250, Math.max(60, screenY - 20))}px`;
 
       document.getElementById('pop-title').textContent = node.title;
       document.getElementById('pop-meta').textContent =
-        `ID: ${node.id} | СЕКТОР: ${node.sector_id} | ТИП: ${node.category.toUpperCase()}`;
+        `ID: ${node.id} | СЕКТОР: ${node.sector_id} | ТОЧКА МАСШТАБУ ⌖`;
       document.getElementById('pop-summary').textContent = node.summary;
 
       const lockBtn = document.getElementById('btn-pop-toggle-lock');
       if (node.locked_by_gm || !node.is_decrypted) {
-        lockBtn.textContent = '🔓 Зняти карантин Сіель (Відкрити)';
+        lockBtn.textContent = '🔓 Відкрити';
       } else {
-        lockBtn.textContent = '🔒 Перевести під карантин Сіель';
+        lockBtn.textContent = '🔒 Карантин';
       }
+
+      syncPopoverScreenPosition();
     }
 
-    // Побудова кнопок 9 Маяків Архангелів
     function initBeaconsDrawer() {
       const grid = document.getElementById('beacons-grid');
       const names = ['I. Рафаїль', 'II. Гавриїл', 'III. Уріїл', 'IV. Варахіїл', 'V. Михаїл', 'VI. Єреміїл', 'VII. Рагуїл', 'VIII. Задкіїл', 'IX. Метатрон'];
@@ -957,7 +1040,6 @@
       });
     }
 
-    // Перетягування плаваючого вікна Термінала Сіель
     function makeDraggable(panelEl, handleEl) {
       let dragging = false, offsetX = 0, offsetY = 0;
       handleEl.addEventListener('mousedown', e => {
@@ -976,14 +1058,14 @@
 
     async function bootIrminsul() {
       resizeViewport();
-      centerOnCiel();
+      camera.x = canvas.width / 2 - 3000 * camera.zoom;
+      camera.y = canvas.height / 2 - 3000 * camera.zoom;
       makeDraggable(document.getElementById('ui-ciel-terminal'), document.getElementById('ciel-drag-handle'));
 
       try {
         core = new IrminsulCore();
         await core.initialize();
         cielAgent = new CielArchitectAgent(core);
-        // Застосовуємо стартову геометрію з креслення: Hex
         core.computeLayout('Hex', 420.0, 175.0);
         initBeaconsDrawer();
         refreshAllViews();
@@ -997,18 +1079,27 @@
       requestAnimationFrame(animate);
     }
 
-    // Події миші на полотні
+    // Клік по вузлу фіксує його як Точку Масштабування; клік у порожнечу скидає фокус на Ядро Сіель
     canvas.addEventListener('mousedown', e => {
+      camera.targetX = null;
+      camera.targetY = null;
+
       const rect = canvas.getBoundingClientRect();
       const worldX = (e.clientX - rect.left - camera.x) / camera.zoom;
       const worldY = (e.clientY - rect.top - camera.y) / camera.zoom;
 
-      const hit = graphState.nodes.find(n => Math.hypot(n.x - worldX, n.y - worldY) <= 36);
+      const hit = graphState.nodes.find(n => {
+        const hitRadius = (n.id === 'sec_0') ? 48 : 34;
+        return Math.hypot(n.x - worldX, n.y - worldY) <= hitRadius;
+      });
+
       if (hit) {
         triggerCielPulse();
-        openNodePopover(hit, e.clientX, e.clientY);
+        openNodePopover(hit);
       } else {
+        selectedNode = null;
         document.getElementById('ui-node-popover').style.display = 'none';
+        updateZoomAnchorBadge();
         camera.dragging = true;
         camera.lastX = e.clientX;
         camera.lastY = e.clientY;
@@ -1021,18 +1112,36 @@
       camera.y += e.clientY - camera.lastY;
       camera.lastX = e.clientX;
       camera.lastY = e.clientY;
+      syncPopoverScreenPosition();
     });
 
     window.addEventListener('mouseup', () => { camera.dragging = false; });
 
+    // ТОЧКОВЕ МАСШТАБУВАННЯ ВІД ОБРАНОГО ВУЗЛА АБО ЦЕНТРАЛЬНОГО ЯДРА СІЕЛЬ
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
-      camera.zoom = Math.min(2.4, Math.max(0.28, camera.zoom * (e.deltaY < 0 ? 1.12 : 0.89)));
+      camera.targetX = null;
+      camera.targetY = null;
+
+      const anchor = getActiveZoomAnchor();
+      // Поточні екранні координати нашої Точки Масштабування (вони залишаться нерухомими)
+      const anchorScreenX = camera.x + anchor.x * camera.zoom;
+      const anchorScreenY = camera.y + anchor.y * camera.zoom;
+
+      const factor = e.deltaY < 0 ? 1.13 : 0.885;
+      const newZoom = Math.min(2.5, Math.max(0.25, camera.zoom * factor));
+
+      // Перерахунок зміщення камери так, щоб точка anchor стояла на місці
+      camera.x = anchorScreenX - anchor.x * newZoom;
+      camera.y = anchorScreenY - anchor.y * newZoom;
+      camera.zoom = newZoom;
+
+      syncPopoverScreenPosition();
     }, { passive: false });
 
     window.addEventListener('resize', resizeViewport);
 
-    // Перемикання геометрії на лівій рейці (left-rail)
+    // Перемикання геометрії зі збереженням фокуса на поточній Точці Масштабування
     document.querySelectorAll('.geo-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.geo-btn').forEach(b => b.classList.remove('active'));
@@ -1042,13 +1151,14 @@
           core.computeLayout(currentLayout, currentLayout === 'Orbit' ? 500.0 : 420.0, 175.0);
           triggerCielPulse();
           refreshAllViews();
+          const anchor = getActiveZoomAnchor();
+          focusCameraOnNode(anchor, false);
         }
       });
     });
 
     document.getElementById('btn-center-ciel').addEventListener('click', centerOnCiel);
 
-    // Згортання/розгортання Термінала Сіель у чисту Сферу Частинок
     const cielTerminal = document.getElementById('ui-ciel-terminal');
     document.getElementById('btn-minimize-orb').addEventListener('click', e => {
       e.stopPropagation();
@@ -1068,7 +1178,6 @@
       cielTerminal.style.display = cielTerminal.style.display === 'none' ? 'flex' : 'none';
     });
 
-    // Показ/приховування блоку Маяків Архангелів (hidden-until-call)
     document.getElementById('btn-toggle-beacons').addEventListener('click', e => {
       const drawer = document.getElementById('ui-beacons-drawer');
       drawer.classList.toggle('visible');
@@ -1077,7 +1186,6 @@
         : '✦ Маяки Архангелів [Приховано]';
     });
 
-    // Перемикач Ролі: Майстер / Гравець
     document.getElementById('btn-role-switch').addEventListener('click', e => {
       isMaster = !isMaster;
       e.target.textContent = isMaster ? 'Доступ: МАЙСТЕР' : 'Доступ: ГРАВЕЦЬ (Гліфи)';
@@ -1088,7 +1196,6 @@
       }
     });
 
-    // Внутрішні вкладки Термінала Сіель
     document.querySelectorAll('.sub-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1098,7 +1205,6 @@
       });
     });
 
-    // Виконання прямої директиви Архітектора Сіель
     document.getElementById('btn-exec-directive').addEventListener('click', () => {
       const cmd = document.getElementById('ciel-directive-input').value.trim();
       if (!cmd || !cielAgent) return;
@@ -1109,7 +1215,6 @@
       refreshAllViews();
     });
 
-    // AI-Мутація графа природною мовою
     document.getElementById('btn-exec-ai').addEventListener('click', async () => {
       const prompt = document.getElementById('ciel-directive-input').value.trim();
       const apiKey = document.getElementById('vault-api-key').value.trim();
@@ -1130,9 +1235,15 @@
       }
     });
 
-    // Закриття та керування карантином у спливаючому Node Popover
+    // Керування інспектором вузла (закриття скидає фокус зуму назад на Сектор 0)
     document.getElementById('btn-close-popover').addEventListener('click', () => {
+      selectedNode = null;
       document.getElementById('ui-node-popover').style.display = 'none';
+      updateZoomAnchorBadge();
+    });
+
+    document.getElementById('btn-pop-focus-center').addEventListener('click', () => {
+      if (selectedNode) focusCameraOnNode(selectedNode, false);
     });
 
     document.getElementById('btn-pop-toggle-lock').addEventListener('click', () => {
@@ -1143,15 +1254,13 @@
       triggerCielPulse();
       refreshAllViews();
       const updated = graphState.nodes.find(n => n.id === selectedNode.id);
-      if (updated) openNodePopover(updated, parseFloat(document.getElementById('ui-node-popover').style.left), parseFloat(document.getElementById('ui-node-popover').style.top));
+      if (updated) openNodePopover(updated);
     });
 
-    // Пошук по графу
     document.getElementById('global-search').addEventListener('input', e => {
       searchFilter = e.target.value.trim().toLowerCase();
     });
 
-    // Вплітання хроніки сесії
     document.getElementById('btn-ingest-logs').addEventListener('click', () => {
       if (!core) return;
       const title = document.getElementById('log-session-title').value.trim();
@@ -1164,7 +1273,6 @@
         `[СІЕЛЬ]: Хроніку «${title}» (${newId}) вплетено в коріння Ірмінсуля.`;
     });
 
-    // Копіювання RAG та експорт JSON
     document.getElementById('btn-copy-rag').addEventListener('click', () => {
       navigator.clipboard.writeText(document.getElementById('ciel-rag-box').textContent);
     });
@@ -1178,7 +1286,6 @@
       a.click();
     });
 
-    // Крипто-сейф та пуш матриці в GitHub
     document.getElementById('btn-wasm-encrypt').addEventListener('click', () => {
       if (!core) return;
       const pass = document.getElementById('vault-master-pass').value;
