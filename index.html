@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ІРМІНСУЛЬ // Ядро Сіель та Модуль Рафаїль (WASM)</title>
+  <style>
+    :root {
+      --bg-deep: #050811;
+      --panel-bg: rgba(10, 16, 30, 0.88);
+      --border-cyan: rgba(0, 229, 255, 0.35);
+      --cyan-glow: #00e5ff;
+      --gold-glow: #ffca28;
+      --danger-glow: #ff4081;
+      --emerald-glow: #00e676;
+      --text-main: #e2f1ff;
+      --text-muted: #7e99b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #0b1528 0%, var(--bg-deep) 100%);
+      color: var(--text-main);
+      font-family: 'Segoe UI', Roboto, monospace;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Верхня панель керування (HUD) */
+    header {
+      height: 62px;
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--cyan-glow);
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+    }
+
+    .status-badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--text-muted);
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .status-badge.active {
+      border-color: var(--cyan-glow);
+      color: var(--cyan-glow);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+    }
+
+    .status-badge.manas {
+      border-color: var(--gold-glow);
+      color: var(--gold-glow);
+      box-shadow: 0 0 14px rgba(255, 202, 40, 0.45);
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      background: rgba(0, 229, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--border-cyan);
+      padding: 7px 13px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    button:hover:not(:disabled) {
+      background: rgba(0, 229, 255, 0.22);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+    }
+
+    button.active {
+      background: var(--cyan-glow);
+      color: #030710;
+      font-weight: 700;
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.7);
+    }
+
+    button.gold {
+      border-color: var(--gold-glow);
+      color: var(--gold-glow);
+    }
+
+    button.gold.active {
+      background: var(--gold-glow);
+      color: #050811;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Основна робоча зона */
+    .workspace {
+      flex: 1;
+      position: relative;
+      display: flex;
+      overflow: hidden;
+    }
+
+    #graph-canvas {
+      flex: 1;
+      cursor: grab;
+      display: block;
+    }
+
+    #graph-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Права бічна панель Ехолокації та Рафаїля */
+    aside {
+      width: 380px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border-cyan);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      overflow-y: auto;
+    }
+
+    .panel-box {
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      background: rgba(5, 10, 20, 0.65);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--cyan-glow);
+      border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+      padding-bottom: 6px;
+    }
+
+    .node-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    .node-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .node-summary {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--text-main);
+      white-space: pre-line;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--cyan-glow);
+    }
+
+    .raphael-console {
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #80f8ff;
+      background: rgba(0, 30, 45, 0.45);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 12px;
+      border-radius: 6px;
+      min-height: 82px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-cyan);
+      color: var(--text-main);
+      padding: 7px 10px;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+
+    .legend {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-cyan);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      display: flex;
+      gap: 14px;
+      pointer-events: none;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>❖ ІРМІНСУЛЬ // WASM-ЯДРО</span>
+      <span id="raphael-badge" class="status-badge">РАФАЇЛЬ: DORMANT</span>
+    </div>
+
+    <!-- Перемикання 4 режимів геометрії Rust -->
+    <div class="controls-group">
+      <button class="layout-btn" data-mode="Tree">Древо (Tree)</button>
+      <button class="layout-btn active" data-mode="Radial">Радіал (Radial)</button>
+      <button class="layout-btn" data-mode="Orbit">Орбіти (Orbit)</button>
+      <button class="layout-btn" data-mode="Hex">Стільники (Hex)</button>
+      <button id="btn-center" title="Центрувати на Секторі 0">⌖ Центр</button>
+    </div>
+
+    <!-- Ролі та Маяки Архангелів -->
+    <div class="controls-group">
+      <button id="btn-beacon-1">⚡ Маяк I (Розбудити Рафаїля)</button>
+      <button id="btn-manas" class="gold">✦ Синхронізувати 9/9 (Манас)</button>
+      <button id="btn-role" class="gold">Роль: ГРАВЕЦЬ</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <canvas id="graph-canvas"></canvas>
+
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:#ffca28"></span> Ядро Сіель (Сектор 0)</div>
+      <div class="legend-item"><span class="dot" style="background:#00e5ff"></span> Сектори I–VIII</div>
+      <div class="legend-item"><span class="dot" style="background:#b388ff"></span> ШІ-Архангели</div>
+      <div class="legend-item"><span class="dot" style="background:#00e676"></span> Вагон Метро / Маркери</div>
+      <div class="legend-item"><span class="dot" style="background:#ff4081"></span> Зашифровано (Гліфи)</div>
+    </div>
+
+    <aside>
+      <!-- Картка обраного вузла -->
+      <div class="panel-box">
+        <div class="panel-title">Вузол матриці Сіель</div>
+        <div id="node-title" class="node-title">Оберіть об'єкт на карті</div>
+        <div id="node-meta" class="node-meta">Клікніть по будь-якому вузлу на полотні</div>
+        <div id="node-summary" class="node-summary">Дані вузла відобразяться тут після вибору.</div>
+      </div>
+
+      <!-- Механіка Ехолокації (Карта <-> Сіель <-> Рафаїль) -->
+      <div class="panel-box">
+        <div class="panel-title">Ехолокація та Дешифровка</div>
+        <div id="raphael-voice-box" class="raphael-console">
+          [СИСТЕМА ОЧІКУВАННЯ]: Оберіть зашифрований об'єкт (наприклад, «Оранжерею №3» у Секторі I) та запустіть імпульс ехолокації.
+        </div>
+        <div class="controls-group" style="margin-top:4px;">
+          <button id="btn-echo-req" disabled style="flex:1;">1. Запит дешифровки</button>
+          <button id="btn-echo-confirm" class="gold" disabled style="flex:1;">2. «Так, розшифруй»</button>
+        </div>
+      </div>
+
+      <!-- Перевірка спойлерів Fail-Safe -->
+      <div class="panel-box">
+        <div class="panel-title">Фільтр Спойлерів (Fail-Safe)</div>
+        <div class="input-row">
+          <input type="text" id="failsafe-input" placeholder="Запит до Рафаїля (напр. сіель, катастрофа)..." />
+          <button id="btn-failsafe-check">Перевірити</button>
+        </div>
+        <div id="failsafe-result" class="node-meta" style="color:#80f8ff;">
+          Статус: готовність до перевірки запиту.
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script type="module">
+    import init, { IrminsulEngine, LayoutMode, UserRole } from './irminsul_wasm/pkg/irminsul_wasm.js';
+
+    const canvas = document.getElementById('graph-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let engine = null;
+    let currentRole = UserRole.Player;
+    let currentMode = 'Radial';
+    let graphData = { raphael_state: 'Dormant', nodes: [], edges: [] };
+    let selectedNode = null;
+
+    // Камера полотна (Сектор 0 знаходиться у точці 3000, 3000)
+    let camera = { x: 0, y: 0, zoom: 0.65, dragging: false, lastX: 0, lastY: 0 };
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      drawGraph();
+    }
+
+    function centerCamera() {
+      camera.zoom = 0.68;
+      camera.x = canvas.width / 2 - 3000 * camera.zoom;
+      camera.y = canvas.height / 2 - 3000 * camera.zoom;
+      drawGraph();
+    }
+
+    // Оновлення даних із Rust WASM
+    function syncFromRust() {
+      if (!engine) return;
+      const rawJson = engine.export_view_json(currentRole);
+      graphData = JSON.parse(rawJson);
+
+      // Оновлення бейджа стану Рафаїля
+      const badge = document.getElementById('raphael-badge');
+      badge.textContent = `РАФАЇЛЬ: ${graphData.raphael_state.toUpperCase()}`;
+      badge.className = 'status-badge';
+      if (graphData.raphael_state === 'Active') badge.classList.add('active');
+      if (graphData.raphael_state === 'Manas') badge.classList.add('manas');
+
+      // Якщо вузол вже обрано — оновлюємо його дані в правій панелі
+      if (selectedNode) {
+        const updated = graphData.nodes.find(n => n.id === selectedNode.id);
+        if (updated) selectNode(updated, false);
+      }
+
+      drawGraph();
+    }
+
+    function applyLayout(modeName) {
+      currentMode = modeName;
+      const modeEnum = {
+        Tree: LayoutMode.Tree,
+        Radial: LayoutMode.Radial,
+        Orbit: LayoutMode.Orbit,
+        Hex: LayoutMode.Hex
+      }[modeName];
+
+      const radius = modeName === 'Orbit' ? 500.0 : 420.0;
+      engine.compute_layout(modeEnum, radius, 175.0);
+      syncFromRust();
+    }
+
+    // Відмальовка графа Ірмінсуля на Canvas
+    function drawGraph() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(camera.x, camera.y);
+      ctx.scale(camera.zoom, camera.zoom);
+
+      // 1. Радарна сітка навколо Сектора 0 (3000, 3000)
+      if (currentMode !== 'Tree') {
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.08)';
+        ctx.lineWidth = 2;
+        [240, 420, 580, 740].forEach(r => {
+          ctx.beginPath();
+          ctx.arc(3000, 3000, r, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+      }
+
+      // Карта швидкого доступу до вузлів за ID
+      const nodeMap = {};
+      graphData.nodes.forEach(n => { nodeMap[n.id] = n; });
+
+      // 2. Лінії зв'язків (Edges)
+      graphData.edges.forEach(edge => {
+        const fromNode = nodeMap[edge.from];
+        const toNode = nodeMap[edge.to];
+        if (!fromNode || !toNode) return;
+
+        const isHighlighted = selectedNode && (selectedNode.id === fromNode.id || selectedNode.id === toNode.id);
+        ctx.beginPath();
+        ctx.moveTo(fromNode.x, fromNode.y);
+        ctx.lineTo(toNode.x, toNode.y);
+        ctx.strokeStyle = isHighlighted ? 'rgba(0, 229, 255, 0.85)' : 'rgba(0, 229, 255, 0.22)';
+        ctx.lineWidth = isHighlighted ? 3.5 : 1.8;
+        ctx.stroke();
+      });
+
+      // 3. Вузли (Nodes)
+      graphData.nodes.forEach(node => {
+        const isSelected = selectedNode && selectedNode.id === node.id;
+        let color = '#00e5ff';
+        let radius = 22;
+
+        if (node.category === 'core') { color = '#ffca28'; radius = 34; }
+        else if (node.category === 'start') { color = '#00e676'; radius = 20; }
+        else if (node.category === 'ai') { color = '#b388ff'; radius = 19; }
+        else if (node.category === 'marker') { color = '#00e676'; radius = 18; }
+
+        if (!node.is_decrypted && currentRole === UserRole.Player) {
+          color = '#ff4081'; // Зашифровані гліфи для гравців
+        }
+
+        // Світіння обраного вузла
+        if (isSelected) {
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, radius + 10, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0, 229, 255, 0.22)';
+          ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#071022';
+        ctx.fill();
+        ctx.lineWidth = isSelected ? 4 : 2.5;
+        ctx.strokeStyle = color;
+        ctx.stroke();
+
+        // Підпис вузла
+        ctx.font = isSelected ? 'bold 14px Segoe UI, monospace' : '13px Segoe UI, monospace';
+        ctx.fillStyle = '#e2f1ff';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.title, node.x, node.y + radius + 20);
+      });
+
+      ctx.restore();
+    }
+
+    // Вибір вузла при кліку
+    function selectNode(node, resetVoice = true) {
+      selectedNode = node;
+      document.getElementById('node-title').textContent = node.title;
+      document.getElementById('node-meta').textContent =
+        `ID: ${node.id} | Сектор: ${node.sector_id} | Категорія: ${node.category.toUpperCase()}`;
+      document.getElementById('node-summary').textContent = node.summary;
+
+      const btnReq = document.getElementById('btn-echo-req');
+      const btnConfirm = document.getElementById('btn-echo-confirm');
+
+      btnReq.disabled = node.is_decrypted;
+      if (resetVoice) {
+        btnConfirm.disabled = true;
+      }
+      drawGraph();
+    }
+
+    // Ініціалізація WASM-ядра
+    async function boot() {
+      await init();
+      engine = new IrminsulEngine();
+      resizeCanvas();
+      centerCamera();
+      syncFromRust();
+
+      // Попередньо обираємо зашифровану Оранжерею №3 для демонстрації
+      const demoMarker = graphData.nodes.find(n => n.id === 'marker_greenhouse_3');
+      if (demoMarker) selectNode(demoMarker);
+    }
+
+    // Події миші для полотна (Pan, Zoom, Клік)
+    canvas.addEventListener('mousedown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const worldX = (e.clientX - rect.left - camera.x) / camera.zoom;
+      const worldY = (e.clientY - rect.top - camera.y) / camera.zoom;
+
+      // Перевіряємо, чи клікнули по вузлу
+      const clicked = graphData.nodes.find(n => {
+        const dx = n.x - worldX;
+        const dy = n.y - worldY;
+        return Math.sqrt(dx * dx + dy * dy) <= 32;
+      });
+
+      if (clicked) {
+        selectNode(clicked);
+      } else {
+        camera.dragging = true;
+        camera.lastX = e.clientX;
+        camera.lastY = e.clientY;
+      }
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!camera.dragging) return;
+      camera.x += e.clientX - camera.lastX;
+      camera.y += e.clientY - camera.lastY;
+      camera.lastX = e.clientX;
+      camera.lastY = e.clientY;
+      drawGraph();
+    });
+
+    window.addEventListener('mouseup', () => { camera.dragging = false; });
+
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.12 : 0.89;
+      camera.zoom = Math.min(2.2, Math.max(0.25, camera.zoom * factor));
+      drawGraph();
+    }, { passive: false });
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // Кнопки перемикання розкладки
+    document.querySelectorAll('.layout-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyLayout(btn.dataset.mode);
+      });
+    });
+
+    document.getElementById('btn-center').addEventListener('click', centerCamera);
+
+    // Активація Маяка I (Пробудження Рафаїля)
+    document.getElementById('btn-beacon-1').addEventListener('click', () => {
+      const msg = engine.activate_archangel_beacon(1);
+      document.getElementById('raphael-voice-box').textContent = `[РАФАЇЛЬ // АКТИВАЦІЯ]: ${msg}`;
+      syncFromRust();
+    });
+
+    // Синхронізація всіх 9 Архангелів (Еволюція у Манаса)
+    document.getElementById('btn-manas').addEventListener('click', () => {
+      let msg = '';
+      for (let i = 1; i <= 9; i++) {
+        msg = engine.activate_archangel_beacon(i);
+      }
+      document.getElementById('raphael-voice-box').textContent = `[СІЕЛЬ <-> РАФАЇЛЬ]: ${msg}`;
+      syncFromRust();
+    });
+
+    // Перемикач Ролі: Гравець / Майстер
+    document.getElementById('btn-role').addEventListener('click', e => {
+      if (currentRole === UserRole.Player) {
+        currentRole = UserRole.Master;
+        e.target.textContent = 'Роль: МАЙСТЕР (GM)';
+        e.target.classList.add('active');
+      } else {
+        currentRole = UserRole.Player;
+        e.target.textContent = 'Роль: ГРАВЕЦЬ';
+        e.target.classList.remove('active');
+      }
+      syncFromRust();
+    });
+
+    // Ехолокація Крок 1: Запит на дешифровку
+    document.getElementById('btn-echo-req').addEventListener('click', () => {
+      if (!selectedNode) return;
+      const res = JSON.parse(engine.request_echolocation(selectedNode.id));
+      document.getElementById('raphael-voice-box').textContent = `РАФАЇЛЬ: «${res.raphael_voice}»`;
+      document.getElementById('node-summary').textContent = res.display_summary;
+      document.getElementById('btn-echo-confirm').disabled = (res.status !== 'AWAITING_CONFIRM');
+    });
+
+    // Ехолокація Крок 2: Голосове/текстове підтвердження («Так, розшифруй»)
+    document.getElementById('btn-echo-confirm').addEventListener('click', () => {
+      if (!selectedNode) return;
+      const res = JSON.parse(engine.confirm_echolocation(selectedNode.id));
+      document.getElementById('raphael-voice-box').textContent = `РАФАЇЛЬ: «${res.raphael_voice}»`;
+      document.getElementById('btn-echo-confirm').disabled = true;
+      syncFromRust();
+    });
+
+    // Перевірка Fail-Safe спойлерів
+    document.getElementById('btn-failsafe-check').addEventListener('click', () => {
+      const q = document.getElementById('failsafe-input').value.trim();
+      if (!q) return;
+      const res = engine.check_fail_safe(q, currentRole);
+      const out = document.getElementById('failsafe-result');
+      out.textContent = res;
+      out.style.color = res.startsWith('BLOCKED') ? '#ff4081' : '#00e676';
+    });
+
+    boot();
+  </script>
+</body>
+</html>
