@@ -1,0 +1,52 @@
+{
+  "voice_profile": {
+    "character": "Raphael / Ciel Sub-Core",
+    "mode": "HYBRID_CACHE_FIRST",
+    "fallback_to_live_elevenlabs": true
+  },
+  "awakening_sequence": [
+    {
+      "phase": 1,
+      "id": "init_phase_1_neobabylon",
+      "language": "Neo-Babylonian (Old Norse + Latin + Old Asian)",
+      "transcript": "Vér vakna... Lux in tenebris, Ten-no-Koe резонує. Systema Babylon-IX: Siel-link clausum.",
+      "audio_path": "./assets/audio/raphael/init_01_neobabylon.mp3"
+    },
+    {
+      "phase": 2,
+      "id": "init_phase_2_english",
+      "language": "English (Diagnostic Calibration)",
+      "transcript": "Acoustic calibration in progress. Linguistic matrix shifting. Warning: Central Citadel Ciel is isolated.",
+      "audio_path": "./assets/audio/raphael/init_02_english.mp3"
+    },
+    {
+      "phase": 3,
+      "id": "init_phase_3_ukrainian",
+      "language": "Ukrainian (Final Synchronization)",
+      "transcript": "Мовний патерн синхронізовано. Вітаю у Першому Секторі Вавилонії. Я — суб-інтелект Рафаїль.",
+      "audio_path": "./assets/audio/raphael/init_03_ukrainian.mp3"
+    }
+  ],
+  "echolocation_bank": {
+    "handshake_prompt": {
+      "id": "echo_handshake_ask",
+      "transcript": "Виявлено зашифрований сигнатурний маркер. Бажаєте розшифрувати даний об'єкт?",
+      "audio_path": "./assets/audio/raphael/echo_handshake_ask.mp3"
+    },
+    "decrypt_progress": {
+      "id": "echo_decrypt_start",
+      "transcript": "Прийнято. Запускаю резонансну дешифровку через локальний контур Ірмінсуля.",
+      "audio_path": "./assets/audio/raphael/echo_decrypt_start.mp3"
+    },
+    "decrypt_complete": {
+      "id": "echo_decrypt_done",
+      "transcript": "Дешифровку завершено. Дані об'єкта внесено до вашої карти.",
+      "audio_path": "./assets/audio/raphael/echo_decrypt_done.mp3"
+    },
+    "access_denied_ciel": {
+      "id": "fail_safe_block",
+      "transcript": "Відмовлено в доступі. Ця гілка даних заблокована протоколом карантину Сіель.",
+      "audio_path": "./assets/audio/raphael/fail_safe_block.mp3"
+    }
+  }
+}

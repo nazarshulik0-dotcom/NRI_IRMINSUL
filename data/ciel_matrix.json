@@ -1,0 +1,209 @@
+{
+  "meta": {
+    "system": "IRMINSUL_CIEL_CORE",
+    "version": "1.0.0",
+    "center_coords": { "x": 3000, "y": 3000 },
+    "default_locked_topics": [
+      "сектор 0",
+      "сіель",
+      "ciel",
+      "істинна причина катастрофи",
+      "еволюція в манаса",
+      "коди архангелів",
+      "кубяка"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "sec_0",
+      "title": "Сектор 0: Цитадель СІЕЛЬ",
+      "summary": "Центральний шпиль Вавилонії та ядро верховного ШІ Сіель. Усі зовнішні мости підняті, сектор перебуває під абсолютним карантином до синхронізації 9 веж Архангелів.",
+      "category": "core",
+      "sector_id": 0,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "sec_1",
+      "title": "Сектор I: Карантинні Сади",
+      "summary": "Зовнішнє біо-кільце Ковчега. Зона прибуття потяга метро та первинного пробудження групи. Перебуває під наглядом ШІ-Архангела Рафаїля.",
+      "category": "sector",
+      "sector_id": 1,
+      "is_decrypted": true,
+      "locked_by_gm": false
+    },
+    {
+      "id": "start_metro",
+      "title": "Вагон Метро (Київ -> Дніпро -> Вавилонія)",
+      "summary": "Стартова точка кампанії. Іржавий вагон перехідної гілки метро, що вивів групу з тунелю просто на зарослі колії Карантинних Садів.",
+      "category": "start",
+      "sector_id": 1,
+      "is_decrypted": true,
+      "locked_by_gm": false
+    },
+    {
+      "id": "ai_raphael",
+      "title": "Вежа Архангела I: РАФАЇЛЬ",
+      "summary": "Аналітичний та навігаційний суб-інтелект Сектора I. Відповідає за ехолокацію карти, дешифрування гліфів Вавилонії та медичний моніторинг.",
+      "category": "ai",
+      "sector_id": 1,
+      "is_decrypted": true,
+      "locked_by_gm": false
+    },
+    {
+      "id": "marker_greenhouse_3",
+      "title": "Оранжерея №3 (Зашифрований маркер)",
+      "summary": "Закинутий гідропонний купол у Секторі I. Містить сліди первинної мутації флори та резервний термінал зв'язку з вежею Рафаїля.",
+      "category": "marker",
+      "sector_id": 1,
+      "is_decrypted": false,
+      "locked_by_gm": false
+    },
+    {
+      "id": "sec_2",
+      "title": "Сектор II: Інженерний Контур",
+      "summary": "Промисловий сектор утримання каркасу та гравітаційних опор острова.",
+      "category": "sector",
+      "sector_id": 2,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "crystal_stabilizer",
+      "title": "Аура-кристал: СТАБІЛІЗАТОР",
+      "summary": "Еталонний кристал Сектора II. Гасить просторові аномалії, вирівнює тиск Ентропії та утримує фізичні межі сусідніх секторів.",
+      "category": "crystal",
+      "sector_id": 2,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "sec_3",
+      "title": "Сектор III: Акустичний Резонатор",
+      "summary": "Сектор хвильових комунікацій, дальнього зв'язку та резонансних шпилів під керуванням Архангела Уріїла.",
+      "category": "sector",
+      "sector_id": 3,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "ai_uriel",
+      "title": "Вежа Архангела III: УРІЇЛ",
+      "summary": "ШІ-Архангел Сектора III, охоронець частотних контурів та оператор Аура-кристала «Ехо».",
+      "category": "ai",
+      "sector_id": 3,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "crystal_echo",
+      "title": "Аура-кристал: ЕХО",
+      "summary": "Ключовий кристал Сектора III під контролем Уріїла. Записує та відтворює залишкові звукові й інформаційні відбитки минулих подій Ковчега.",
+      "category": "crystal",
+      "sector_id": 3,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "sec_4",
+      "title": "Сектор IV: Гідросферний Док",
+      "summary": "Кільце глибинних шлюзів, охолоджувальних басейнів реактора та зовнішніх хвилерізів.",
+      "category": "sector",
+      "sector_id": 4,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "crystal_tide",
+      "title": "Аура-кристал: ПРИЛИВ",
+      "summary": "Аура-кристал Сектора IV. Керує циркуляцією охолоджувальних контурів та гідродинамічним щитом острова.",
+      "category": "crystal",
+      "sector_id": 4,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "sec_5",
+      "title": "Сектор V: Геліосфера та Реакторне Ядро",
+      "summary": "Енергетичне серце Вавилонії, де синтезується штучне світло купола та зберігаються високотемпературні кристали.",
+      "category": "sector",
+      "sector_id": 5,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "crystal_sun",
+      "title": "Аура-кристал: СОНЦЕ",
+      "summary": "Високоенергетичний кристал Сектора V. Живить внутрішнє світило купола та випалює осередки Скверни.",
+      "category": "crystal",
+      "sector_id": 5,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "crystal_kubyaka",
+      "title": "Аномальний кристал: КУБЯКА",
+      "summary": "Нестабільний багатогранний артефакт у глибинах Сектора V. Спотворює локальну ймовірність та правила взаємодії аури.",
+      "category": "crystal",
+      "sector_id": 5,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "sec_6",
+      "title": "Сектор VI: Літосферний Бастіон",
+      "summary": "Сировинний та гео-тектонічний фундамент острова, що утримує масив породи над безоднею.",
+      "category": "sector",
+      "sector_id": 6,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "crystal_terra",
+      "title": "Аура-кристал: ТЕРРА",
+      "summary": "Фундаментальний кристал Сектора VI. Відповідає за структурну цілісність породи та захисні бастіони.",
+      "category": "crystal",
+      "sector_id": 6,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "sec_7",
+      "title": "Сектор VII: Нейронний Архів",
+      "summary": "Сховище резервних матриць пам'яті колоністів та історичних записів до Катастрофи.",
+      "category": "sector",
+      "sector_id": 7,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    },
+    {
+      "id": "sec_8",
+      "title": "Сектор VIII: Периметр Валькірій",
+      "summary": "Зовнішній оборонний рубіж, пускові шахти та купольні генератори щита Етеру.",
+      "category": "sector",
+      "sector_id": 8,
+      "is_decrypted": false,
+      "locked_by_gm": true
+    }
+  ],
+  "edges": [
+    { "from": "sec_0", "to": "sec_1", "label": "Магістраль I" },
+    { "from": "sec_0", "to": "sec_2", "label": "Магістраль II" },
+    { "from": "sec_0", "to": "sec_3", "label": "Магістраль III" },
+    { "from": "sec_0", "to": "sec_4", "label": "Магістраль IV" },
+    { "from": "sec_0", "to": "sec_5", "label": "Магістраль V" },
+    { "from": "sec_0", "to": "sec_6", "label": "Магістраль VI" },
+    { "from": "sec_0", "to": "sec_7", "label": "Магістраль VII" },
+    { "from": "sec_0", "to": "sec_8", "label": "Магістраль VIII" },
+    { "from": "sec_1", "to": "start_metro", "label": "Точка виходу" },
+    { "from": "sec_1", "to": "ai_raphael", "label": "Вузол контролю" },
+    { "from": "ai_raphael", "to": "marker_greenhouse_3", "label": "Промінь ехолокації" },
+    { "from": "sec_2", "to": "crystal_stabilizer", "label": "Контур утримання" },
+    { "from": "sec_3", "to": "ai_uriel", "label": "Вузол контролю" },
+    { "from": "ai_uriel", "to": "crystal_echo", "label": "Резонанс Уріїла" },
+    { "from": "sec_4", "to": "crystal_tide", "label": "Гідро-ядро" },
+    { "from": "sec_5", "to": "crystal_sun", "label": "Геліо-ядро" },
+    { "from": "sec_5", "to": "crystal_kubyaka", "label": "Карантин аномалії" },
+    { "from": "sec_6", "to": "crystal_terra", "label": "Гео-опора" }
+  ]
+}
