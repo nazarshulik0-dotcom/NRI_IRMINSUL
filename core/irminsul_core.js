@@ -12,7 +12,7 @@ export class IrminsulCore {
     this.role = UserRole.Master;
   }
 
-  // 1. Повна ініціалізація: завантаження WASM + усіх баз із папки /data/
+  // 1. Повна ініціалізація: завантаження WASM + усіх баз із папки /data/ напряму в Rust
   async initialize() {
     await init();
     this.engine = new IrminsulEngine();
@@ -26,6 +26,9 @@ export class IrminsulCore {
     this.matrixData = await matrixRes.json();
     this.audioManifest = await audioRes.json();
     this.chronicleData = await chronicleRes.json();
+
+    // Завантажуємо всю матрицю Сіель (сектори, Архангелів, кристали) напряму в Rust WASM
+    this.engine.load_external_matrix(JSON.stringify(this.matrixData));
 
     // Синхронізуємо додаткові теми карантину з JSON у Rust-ядро
     if (this.matrixData?.meta?.default_locked_topics) {
@@ -63,36 +66,9 @@ export class IrminsulCore {
     return this.getFullState();
   }
 
-  // 4. Отримання об'єднаного стану графа (Rust WASM + розширені вузли ciel_matrix.json)
+  // 4. Отримання стану графа напряму з Rust WASM
   getFullState() {
-    const wasmView = JSON.parse(this.engine.export_view_json(this.role));
-    const wasmNodeMap = new Map(wasmView.nodes.map(n => [n.id, n]));
-
-    // Доповнюємо граф кристалами та секторами з ciel_matrix.json, яких ще немає у базовому Rust
-    this.matrixData.nodes.forEach(jsonNode => {
-      if (!wasmNodeMap.has(jsonNode.id)) {
-        const parentSector = wasmNodeMap.get(`sec_${jsonNode.sector_id}`) || { x: 3000, y: 3000 };
-        const angle = (jsonNode.id.length * 1.37) % (Math.PI * 2);
-        wasmView.nodes.push({
-          ...jsonNode,
-          title: (this.role === UserRole.Player && !jsonNode.is_decrypted)
-            ? `░▒▓ ŦĦΞ ◈ S${jsonNode.sector_id}-404`
-            : jsonNode.title,
-          summary: (this.role === UserRole.Player && !jsonNode.is_decrypted)
-            ? '[СИГНАТУРУ ЗАШИФРОВАНО ЯДРОМ СІЕЛЬ]'
-            : jsonNode.summary,
-          x: Math.round(parentSector.x + Math.cos(angle) * 165),
-          y: Math.round(parentSector.y + Math.sin(angle) * 165)
-        });
-      }
-    });
-
-    this.matrixData.edges.forEach(jsonEdge => {
-      const exists = wasmView.edges.some(e => e.from === jsonEdge.from && e.to === jsonEdge.to);
-      if (!exists) wasmView.edges.push(jsonEdge);
-    });
-
-    return wasmView;
+    return JSON.parse(this.engine.export_view_json(this.role));
   }
 
   // 5. Генератор RAG-контексту Сіель (формує пакет знань для промпту ШІ без спойлерів)
@@ -114,13 +90,13 @@ export class IrminsulCore {
   }
 
   // 6. Перевірка запиту гравця через Fail-Safe у Rust
-   verifyQuerySafety(queryText) {
+  verifyQuerySafety(queryText) {
     const verdict = this.engine.check_fail_safe(queryText, this.role);
     const isBlocked = verdict.startsWith('BLOCKED');
     return {
       allowed: !isBlocked,
       message: verdict,
-      audioClip: isBlocked ? this.audioManifest.echolocation_bank.access_denied_ciel : null
+      audioClip: isBlocked ? this.audioManifest?.echolocation_bank?.access_denied_ciel : null
     };
   }
 
