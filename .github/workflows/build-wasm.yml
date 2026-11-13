@@ -1,0 +1,48 @@
+name: Auto-Compile Irminsul Rust to WASM
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'irminsul_wasm/Cargo.toml'
+      - 'irminsul_wasm/src/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Завантаження репозиторію
+        uses: actions/checkout@v4
+
+      - name: Встановлення Rust та цілі WASM
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Кешування залежностей Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: irminsul_wasm
+
+      - name: Встановлення wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Компіляція Rust у WebAssembly
+        working-directory: ./irminsul_wasm
+        run: wasm-pack build --target web --release
+
+      - name: Підготовка папки pkg для GitHub Pages
+        run: rm -f irminsul_wasm/pkg/.gitignore
+
+      - name: Збереження готового WASM у репозиторій
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add irminsul_wasm/pkg
+          git diff --staged --quiet || git commit -m "Auto-build Irminsul WASM"
+          git push
