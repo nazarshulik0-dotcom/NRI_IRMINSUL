@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ІРМІНСУЛЬ // ЯДРО СІЕЛЬ [WASM HEX + GROQ + VOCODER DNA]</title>
+  <style>
+    :root {
+      --bg-primary: #030d0a;
+      --bg-secondary: #082219;
+      --panel-surface: rgba(8, 34, 25, 0.88);
+      --accent-main: #00e676;
+      --accent-secondary: #ffd54f;
+      --danger-glow: #ff4081;
+      --archangel-glow: #b388ff;
+      --border-alpha: rgba(0, 230, 118, 0.40);
+      --border-gold: rgba(255, 213, 79, 0.45);
+      --glass-blur: blur(3px);
+      --text-main: #e6fff2;
+      --text-muted: #7ab398;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, -apple-system, monospace;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #graph-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      z-index: 1;
+    }
+
+    #graph-canvas:active {
+      cursor: grabbing;
+    }
+
+    .top-hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: rgba(3, 13, 10, 0.9);
+      border-bottom: 1px solid var(--border-alpha);
+      backdrop-filter: var(--glass-blur);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 30;
+      gap: 10px;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+
+    .brand-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 1.6px;
+      color: var(--accent-main);
+      text-shadow: 0 0 10px rgba(0, 230, 118, 0.45);
+      white-space: nowrap;
+    }
+
+    .wasm-pill {
+      font-size: 10.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-gold);
+      color: var(--accent-secondary);
+      background: rgba(255, 213, 79, 0.08);
+      font-family: monospace;
+      white-space: nowrap;
+    }
+
+    .anchor-pill {
+      font-size: 10.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-alpha);
+      color: var(--accent-main);
+      background: rgba(0, 230, 118, 0.08);
+      font-family: monospace;
+      white-space: nowrap;
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    button, .btn-link {
+      background: rgba(0, 230, 118, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--border-alpha);
+      padding: 6px 11px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-family: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    button:hover, .btn-link:hover {
+      background: rgba(0, 230, 118, 0.22);
+      box-shadow: 0 0 12px rgba(0, 230, 118, 0.35);
+    }
+
+    button.active {
+      background: var(--accent-main);
+      color: #02100a;
+      font-weight: 700;
+      box-shadow: 0 0 14px rgba(0, 230, 118, 0.6);
+    }
+
+    button.gold, .btn-link.gold {
+      border-color: var(--border-gold);
+      color: var(--accent-secondary);
+      background: rgba(255, 213, 79, 0.08);
+    }
+
+    button.gold.active, button.gold:hover, .btn-link.gold:hover {
+      background: var(--accent-secondary);
+      color: #030d0a;
+      font-weight: 700;
+      box-shadow: 0 0 14px rgba(255, 213, 79, 0.55);
+    }
+
+    button.recording {
+      border-color: var(--danger-glow);
+      background: rgba(255, 64, 129, 0.25);
+      color: #fff;
+      box-shadow: 0 0 16px rgba(255, 64, 129, 0.75);
+      animation: pulseRec 1s infinite alternate;
+    }
+
+    @keyframes pulseRec {
+      from { transform: scale(1); }
+      to { transform: scale(1.04); }
+    }
+
+    #ui-geometry-bar {
+      position: fixed;
+      left: 0;
+      top: 69px;
+      background: var(--panel-surface);
+      border: 1px solid var(--border-alpha);
+      border-left: 3px solid var(--accent-main);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      z-index: 25;
+      backdrop-filter: var(--glass-blur);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+    }
+
+    .rail-label {
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 2px;
+    }
+
+    #ui-ciel-terminal {
+      position: fixed;
+      left: 206px;
+      top: 74px;
+      width: 445px;
+      background: var(--panel-surface);
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+      backdrop-filter: var(--glass-blur);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.78), 0 0 22px rgba(255, 213, 79, 0.12);
+      z-index: 28;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: width 0.25s ease, height 0.25s ease, border-radius 0.25s ease;
+    }
+
+    #ui-ciel-terminal.orb-minimized {
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent-secondary);
+      background: radial-gradient(circle, rgba(8, 34, 25, 0.92) 0%, rgba(3, 13, 10, 0.98) 100%);
+      box-shadow: 0 0 28px rgba(255, 213, 79, 0.4), inset 0 0 18px rgba(0, 230, 118, 0.3);
+      cursor: pointer;
+    }
+
+    #ui-ciel-terminal.orb-minimized .terminal-body,
+    #ui-ciel-terminal.orb-minimized .terminal-drag-bar {
+      display: none;
+    }
+
+    #ui-ciel-terminal.orb-minimized .ciel-sphere-stage {
+      height: 116px;
+      border-bottom: none;
+    }
+
+    .terminal-drag-bar {
+      height: 36px;
+      background: rgba(3, 13, 10, 0.9);
+      border-bottom: 1px solid var(--border-gold);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+      font-size: 11.5px;
+      letter-spacing: 1.2px;
+      color: var(--accent-secondary);
+      font-weight: 700;
+    }
+
+    .ciel-sphere-stage {
+      position: relative;
+      height: 138px;
+      background: radial-gradient(circle at center, rgba(0, 230, 118, 0.12) 0%, rgba(3, 13, 10, 0.92) 75%);
+      border-bottom: 1px solid rgba(255, 213, 79, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #ciel-orb-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .sphere-overlay-tag {
+      position: absolute;
+      bottom: 6px;
+      right: 10px;
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--accent-secondary);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .sphere-model-tag {
+      position: absolute;
+      top: 6px;
+      left: 10px;
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--accent-main);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .terminal-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 465px;
+      overflow-y: auto;
+    }
+
+    .sub-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .sub-tab-btn {
+      padding: 5px 4px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    .ciel-console-out {
+      font-family: monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--text-main);
+      background: rgba(2, 8, 6, 0.78);
+      border: 1px solid var(--border-alpha);
+      border-left: 3px solid var(--accent-secondary);
+      padding: 9px;
+      border-radius: 5px;
+      max-height: 155px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      user-select: text;
+    }
+
+    input[type="text"], input[type="password"], select, textarea {
+      width: 100%;
+      background: rgba(2, 9, 7, 0.85);
+      border: 1px solid var(--border-alpha);
+      color: var(--text-main);
+      padding: 7px 9px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-family: inherit;
+      user-select: text;
+    }
+
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+      font-family: monospace;
+    }
+
+    .row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .voice-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 5px;
+      background: rgba(0, 230, 118, 0.05);
+      border: 1px solid rgba(0, 230, 118, 0.22);
+      font-size: 11.5px;
+    }
+
+    .voice-checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--accent-secondary);
+      font-weight: 600;
+    }
+
+    .voice-checkbox-label input {
+      accent-color: var(--accent-main);
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    #ui-node-popover {
+      position: fixed;
+      width: 325px;
+      background: rgba(4, 18, 13, 0.95);
+      border: 1px solid var(--accent-main);
+      border-radius: 8px;
+      padding: 13px;
+      z-index: 26;
+      backdrop-filter: var(--glass-blur);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 16px rgba(0, 230, 118, 0.25);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .popover-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      border-bottom: 1px solid rgba(0, 230, 118, 0.2);
+      padding-bottom: 6px;
+    }
+
+    .popover-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--accent-secondary);
+    }
+
+    .popover-close {
+      padding: 1px 6px;
+      font-size: 11px;
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .popover-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    .popover-summary {
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: var(--text-main);
+      background: rgba(0, 230, 118, 0.05);
+      padding: 8px;
+      border-radius: 5px;
+      max-height: 130px;
+      overflow-y: auto;
+      white-space: pre-line;
+      user-select: text;
+    }
+
+    .dna-badge-box {
+      font-family: monospace;
+      font-size: 10.5px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: rgba(255, 213, 79, 0.08);
+      border: 1px solid var(--border-gold);
+      color: var(--accent-secondary);
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #ui-beacons-drawer {
+      position: fixed;
+      top: 60px;
+      right: 18px;
+      width: 340px;
+      background: var(--panel-surface);
+      border: 1px solid var(--border-alpha);
+      border-radius: 8px;
+      padding: 12px;
+      z-index: 29;
+      backdrop-filter: var(--glass-blur);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #ui-beacons-drawer.visible {
+      display: flex;
+    }
+
+    .beacons-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .beacon-btn {
+      font-size: 11px;
+      padding: 6px 4px;
+      text-align: center;
+    }
+
+    .beacon-btn.synced {
+      border-color: var(--accent-secondary);
+      color: var(--accent-secondary);
+      background: rgba(255, 213, 79, 0.16);
+    }
+
+    #ui-voice-lab-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 8, 6, 0.82);
+      backdrop-filter: blur(6px);
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+    }
+
+    #ui-voice-lab-modal.open {
+      display: flex;
+    }
+
+    .voice-modal-window {
+      width: min(1180px, 95vw);
+      height: min(820px, 90vh);
+      background: var(--bg-primary);
+      border: 1px solid var(--accent-secondary);
+      border-radius: 12px;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 230, 118, 0.22);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .voice-modal-header {
+      height: 46px;
+      background: rgba(8, 34, 25, 0.95);
+      border-bottom: 1px solid var(--border-gold);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .voice-modal-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      color: var(--accent-secondary);
+    }
+
+    #voice-lab-iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #030d0a;
+    }
+
+    .roots-legend {
+      position: fixed;
+      bottom: 14px;
+      left: 14px;
+      background: var(--panel-surface);
+      border: 1px solid var(--border-alpha);
+      backdrop-filter: var(--glass-blur);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      display: flex;
+      gap: 14px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hex-dot {
+      width: 10px;
+      height: 10px;
+      clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top-hud">
+    <div class="brand-cluster">
+      <span class="brand-title">❖ ІРМІНСУЛЬ // ЯДРО СІЕЛЬ</span>
+      <span id="wasm-status-badge" class="wasm-pill">ЯДРО: АКТИВНЕ</span>
+      <span id="zoom-anchor-badge" class="anchor-pill">⌖ ЗУМ: СЕКТОР 0 (СІЕЛЬ)</span>
+    </div>
+
+    <div class="hud-actions">
+      <input type="text" id="global-search" autocomplete="off" spellcheck="false" placeholder="Пошук у коренях Ірмінсуля..." style="width:185px;" />
+      <button id="btn-voice-dna-lab" class="gold" title="Відкрити лабораторію клонування та ДНК голосів">🧬 Voice DNA Lab</button>
+      <button id="btn-toggle-ciel" class="gold">◉ Термінал Сіель</button>
+      <button id="btn-toggle-beacons">✦ Маяки Архангелів</button>
+      <button id="btn-role-switch" class="gold active">Доступ: МАЙСТЕР</button>
+    </div>
+  </header>
+
+  <canvas id="graph-canvas"></canvas>
+
+  <nav id="ui-geometry-bar">
+    <div class="rail-label">Геометрія</div>
+    <button class="geo-btn active" data-mode="Hex">⬢ Стільники (Hex)</button>
+    <button class="geo-btn" data-mode="Radial">❂ Радіал (Radial)</button>
+    <button class="geo-btn" data-mode="Orbit">◎ Орбіти (Orbit)</button>
+    <button class="geo-btn" data-mode="Tree">🌿 Коріння (Tree)</button>
+    <hr style="border:none; border-top:1px solid var(--border-alpha); margin:2px 0;" />
+    <button id="btn-center-ciel" class="gold">⌖ Ядро (Сектор 0)</button>
+  </nav>
+
+  <section id="ui-ciel-terminal">
+    <div class="terminal-drag-bar" id="ciel-drag-handle">
+      <span>❖ ЯДРО СІЕЛЬ // НЕЙРОННИЙ АРХІТЕКТОР</span>
+      <div class="row">
+        <button id="btn-minimize-orb" class="gold" style="padding:2px 7px; font-size:10.5px;">◉ Сфера</button>
+      </div>
+    </div>
+
+    <div class="ciel-sphere-stage" id="ciel-sphere-click-area">
+      <div class="sphere-model-tag" id="ciel-groq-model-tag">GROQ: READY</div>
+      <canvas id="ciel-orb-canvas"></canvas>
+      <div class="sphere-overlay-tag" id="ciel-freq-readout">🧬 ciel_core_0 (188Hz)</div>
+    </div>
+
+    <div class="terminal-body">
+      <div class="sub-tabs">
+        <button class="sub-tab-btn active" data-pane="pane-architect">Архітектор</button>
+        <button class="sub-tab-btn" data-pane="pane-rag">Пам'ять RAG</button>
+        <button class="sub-tab-btn" data-pane="pane-logs">Хроніка</button>
+        <button class="sub-tab-btn" data-pane="pane-voice-git">DNA / Git</button>
+      </div>
+
+      <div id="pane-architect" class="tab-pane active">
+        <div id="ciel-voice-output" class="ciel-console-out">[СІЕЛЬ]: Нейронне ядро синхронізовано. Введіть будь-яке питання або натисніть «🔊 Тест голосу».</div>
+
+        <div class="voice-toolbar">
+          <label class="voice-checkbox-label">
+            <input type="checkbox" id="chk-ciel-auto-voice" checked />
+            <span>🔊 Авто-озвучка</span>
+          </label>
+          <div class="row">
+            <button id="btn-test-ciel-voice" class="gold" style="padding:4px 8px; font-size:11px;">🔊 Тест голосу</button>
+            <button id="btn-stop-ciel-voice" style="padding:4px 8px; font-size:11px;">⏹ Стоп</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <input
+            type="text"
+            id="ciel-directive-input"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="Напиши запит до Сіель або команду (/unlock sec_3)..."
+          />
+          <button id="btn-whisper-mic" title="Голосовий ввід українською">🎙 Голос</button>
+        </div>
+        <div class="row">
+          <button id="btn-exec-directive" class="gold" style="flex:1;">⚡ Виконати</button>
+          <button id="btn-exec-ai" style="flex:1;">✦ Сіель AI (Groq)</button>
+        </div>
+        <div class="popover-meta">
+          Приклади: просто напиши <code>Привіт, Сіель, доповідай стан секторів</code> або <code>/unlock sec_3</code>
+        </div>
+      </div>
+
+      <div id="pane-rag" class="tab-pane">
+        <div id="ciel-rag-box" class="ciel-console-out">Формування нейронного зрізу...</div>
+        <div class="row">
+          <button id="btn-copy-rag" class="gold" style="flex:1;">Скопіювати RAG-промпт</button>
+          <button id="btn-export-json">⬇ JSON</button>
+        </div>
+      </div>
+
+      <div id="pane-logs" class="tab-pane">
+        <input type="text" id="log-session-title" autocomplete="off" value="Сесія 1: Пробудження у Карантинних Садах" />
+        <textarea id="log-session-events">[
+  {"actor": "Група", "action": "Вихід із вагона метро в Секторі I", "sector": 1},
+  {"actor": "Сіель", "action": "Реєстрація сигнатур біля вежі Рафаїля", "sector": 0}
+]</textarea>
+        <button id="btn-ingest-logs" class="gold">🌿 Вплести гілку сесії в Ірмінсуль</button>
+      </div>
+
+      <div id="pane-voice-git" class="tab-pane">
+        <div class="popover-meta">Активний тембр вокодера (можна перемкнути на Рафаїля для перевірки його голосу прямо тут):</div>
+        <div class="row">
+          <select id="voice-dna-selector" style="flex:1;">
+            <option value="ciel_core_0">Сіель (ciel_core_0 // 188Hz, Pitch 0.97)</option>
+            <option value="raphael_archangel_1">Рафаїль (raphael_archangel_1 // 114.5Hz, Pitch 0.94)</option>
+            <option value="manas_raphael_9">Манас (manas_raphael_9 // 104Hz, Pitch 0.91)</option>
+          </select>
+          <button id="btn-sync-voice-bank" class="gold">↻ Sync DNA</button>
+        </div>
+        <div id="voice-dna-console" class="ciel-console-out">Синхронізація голосового банку...</div>
+        <hr style="border:none; border-top:1px solid var(--border-alpha);" />
+        <div class="row">
+          <input type="password" id="github-pat-input" autocomplete="new-password" placeholder="Токен репозиторію (для авто-коміту)" style="flex:1;" />
+          <button id="btn-github-commit" class="gold">☁ У GitHub</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="ui-node-popover">
+    <div class="popover-header">
+      <div>
+        <div id="pop-title" class="popover-title">Назва вузла</div>
+        <div id="pop-meta" class="popover-meta">ID: sec_0 | Сектор 0</div>
+      </div>
+      <button id="btn-close-popover" class="popover-close">✕</button>
+    </div>
+    <div id="pop-summary" class="popover-summary">Опис вузла...</div>
+    <div id="pop-dna-box" class="dna-badge-box"></div>
+    <div class="row">
+      <button id="btn-pop-focus-center" style="flex:1;">⌖ У центр</button>
+      <button id="btn-pop-activate-voice" style="flex:1; display:none;" class="gold">🧬 Обрати тембр</button>
+      <button id="btn-pop-toggle-lock" class="gold" style="flex:1;">🔓 Карантин</button>
+    </div>
+  </div>
+
+  <aside id="ui-beacons-drawer">
+    <div class="popover-header">
+      <span class="popover-title">✦ МЕРЕЖА 9 АРХАНГЕЛІВ // РАФАЇЛЬ</span>
+      <span id="raphael-state-pill" class="wasm-pill">DORMANT</span>
+    </div>
+    <div class="popover-meta">Активація маяків синхронізує суб-ядро Рафаїля з Цитаделлю Сіель:</div>
+    <div class="beacons-grid" id="beacons-grid"></div>
+  </aside>
+
+  <div id="ui-voice-lab-modal">
+    <div class="voice-modal-window">
+      <div class="voice-modal-header">
+        <span class="voice-modal-title">🧬 IRMINSUL VOICE DNA LAB // 10-D VOCODER PROFILER</span>
+        <div class="row">
+          <a href="./voice_lab.html" target="_blank" rel="noopener" class="btn-link gold">↗ Відкрити в новій вкладці</a>
+          <button id="btn-close-voice-modal">✕ Закрити</button>
+        </div>
+      </div>
+      <iframe id="voice-lab-iframe" src="about:blank" title="Irminsul Voice DNA Lab"></iframe>
+    </div>
+  </div>
+
+  <div class="roots-legend">
+    <div class="legend-item"><span class="hex-dot" style="background:#ffd54f"></span> Сфера Сіель (Сектор 0)</div>
+    <div class="legend-item"><span class="hex-dot" style="background:#00e676"></span> Сектори та Відкриті вузли</div>
+    <div class="legend-item"><span class="hex-dot" style="background:#b388ff"></span> Вежі ШІ-Архангелів (Voice DNA)</div>
+    <div class="legend-item"><span class="hex-dot" style="background:#ff4081"></span> Карантин Сіель (Гліфи)</div>
+  </div>
+
+  <script type="module">
+    window.cielVoiceEnergy = 0.0;
+
+    // =========================================================================
+    // I. ОНОВЛЕНИЙ ВОКОДЕР ІЗ 4-КАНАЛЬНИМ ЗАВАНТАЖУВАЧЕМ ХВИЛІ (БЕЗ XENOVA 401)
+    // =========================================================================
+    class IrminsulVoiceVocoder {
+      constructor(options = {}) {
+        this.wasmEngine = options.wasmEngine || null;
+        this.audioCtx = null;
+        this.activeSource = null;
+
+        this.irminsulRepo = 'nazarshulik0-dotcom/NRI_IRMINSUL';
+        this.irminsulBranch = 'main';
+
+        this.currentProfile = {
+          id: 'ciel_core_0',
+          title: 'Ядро Сіель // Сектор 0',
+          pitch_ratio: 0.97,
+          dna_vector: [188.0, 1.8, 2.4, -1.2, 3.6, 2.8, 1.2, 0.08, 0.30, 1.20],
+          samples: {}
+        };
+
+        this.onStatusChange = options.onStatusChange || (() => {});
+        this.onLog = options.onLog || (() => {});
+        this.onEnergyChange = options.onEnergyChange || (() => {});
+
+        window.addEventListener('storage', (e) => {
+          if (e.key === 'entropia_irminsul_active_voice' && e.newValue) {
+            try {
+              const prof = JSON.parse(e.newValue);
+              if (prof && Array.isArray(prof.dna_vector)) {
+                this.applyVoiceProfile(prof);
+              }
+            } catch (_) {}
+          }
+        });
+      }
+
+      attachRustWasm(wasmInstance) {
+        this.wasmEngine = wasmInstance;
+        if (this.wasmEngine && typeof this.wasmEngine.load_voice_dna === 'function') {
+          this.wasmEngine.load_voice_dna(new Float32Array(this.currentProfile.dna_vector));
+        }
+      }
+
+      ensureAudioContext() {
+        if (!this.audioCtx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.audioCtx = new AudioCtx();
+        }
+        if (this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+        return this.audioCtx;
+      }
+
+      stop() {
+        if (this.activeSource) {
+          try { this.activeSource.stop(); } catch (_) {}
+          this.activeSource = null;
+        }
+        this.onEnergyChange(0.0);
+        const f0 = this.currentProfile.dna_vector?.[0] || 188;
+        this.onStatusChange(`🧬 ${this.currentProfile.id} (${f0}Hz)`);
+      }
+
+      async pullProfileFromIrminsul(profileId = 'ciel_core_0') {
+        const bust = `?t=${Date.now()}`;
+        const candidateUrls = [
+          `./voices/irminsul_voice_bank.json${bust}`,
+          `./irminsul_voice_bank.json${bust}`,
+          `https://raw.githubusercontent.com/${this.irminsulRepo}/${this.irminsulBranch}/voices/irminsul_voice_bank.json${bust}`,
+          `https://raw.githubusercontent.com/${this.irminsulRepo}/${this.irminsulBranch}/irminsul_voice_bank.json${bust}`
+        ];
+
+        for (const url of candidateUrls) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (!res.ok) continue;
+            const bank = await res.json();
+            const prof = bank?.profiles?.[profileId] || bank?.[profileId];
+            if (prof && Array.isArray(prof.dna_vector)) {
+              this.applyVoiceProfile({ id: profileId, ...prof });
+              return this.currentProfile;
+            }
+          } catch (_) {}
+        }
+
+        this.applyVoiceProfile(this.currentProfile);
+        return this.currentProfile;
+      }
+
+      applyVoiceProfile(profileObj) {
+        if (!profileObj) return;
+        this.currentProfile = {
+          ...this.currentProfile,
+          ...profileObj
+        };
+        if (this.wasmEngine && typeof this.wasmEngine.load_voice_dna === 'function') {
+          this.wasmEngine.load_voice_dna(new Float32Array(this.currentProfile.dna_vector));
+        }
+        const f0 = this.currentProfile.dna_vector?.[0] || 188;
+        this.onStatusChange(`🧬 ${this.currentProfile.id} (${f0}Hz)`);
+      }
+
+      _normalizeUkrainianText(text) {
+        const numMap = {
+          '0': 'нуль', '1': 'один', '2': 'два', '3': 'три', '4': 'чотири',
+          '5': 'пять', '6': 'шість', '7': 'сім', '8': 'вісім', '9': 'девять',
+          '10': 'десять', '50': 'пятдесят', '100': 'сто'
+        };
+        return String(text || '')
+          .replace(/%/g, ' відсотків ')
+          .replace(/\b(\d+)\b/g, (m) => numMap[m] || m)
+          .replace(/[*_`#~<>]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      _splitTextIntoChunks(text, maxLen = 140) {
+        const words = String(text || '').replace(/\s+/g, ' ').trim().split(' ');
+        const chunks = [];
+        let current = '';
+        for (const w of words) {
+          if ((current + ' ' + w).trim().length > maxLen) {
+            if (current.trim()) chunks.push(current.trim());
+            current = w;
+          } else {
+            current = (current + ' ' + w).trim();
+          }
+        }
+        if (current.trim()) chunks.push(current.trim());
+        return chunks.length > 0 ? chunks : [text];
+      }
+
+      _base64ToArrayBuffer(base64String) {
+        if (!base64String || typeof base64String !== 'string') return null;
+        const cleanB64 = base64String.includes('base64,')
+          ? base64String.split('base64,')[1]
+          : base64String;
+        const binary = window.atob(cleanB64.replace(/\s/g, ''));
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes.buffer;
+      }
+
+      async _fetchChunkAudioBuffer(chunkText) {
+        const ctx = this.ensureAudioContext();
+        const encodedQ = encodeURIComponent(chunkText);
+        const googleUkTw = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=uk&q=${encodedQ}`;
+        const googleUkGtx = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=uk&q=${encodedQ}`;
+
+        const channels = [
+          async () => {
+            const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(googleUkTw)}`);
+            if (!res.ok) return null;
+            return await res.arrayBuffer();
+          },
+          async () => {
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(googleUkTw)}`);
+            if (!res.ok) return null;
+            return await res.arrayBuffer();
+          },
+          async () => {
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(googleUkTw)}`);
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data?.contents ? this._base64ToArrayBuffer(data.contents) : null;
+          },
+          async () => {
+            const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(googleUkGtx)}`);
+            if (!res.ok) return null;
+            return await res.arrayBuffer();
+          }
+        ];
+
+        for (const fn of channels) {
+          try {
+            const buf = await fn();
+            if (buf && buf.byteLength > 350) {
+              return await ctx.decodeAudioData(buf.slice(0));
+            }
+          } catch (_) {}
+        }
+        return null;
+      }
+
+      async speak(text) {
+        const cleanText = this._normalizeUkrainianText(String(text || '').replace(/\[.*?\]/g, '').trim());
+        if (!cleanText) return false;
+
+        this.playCielCueChime();
+        const ctx = this.ensureAudioContext();
+        this.onStatusChange('⏳ SYNTHESIZING VOICE...');
+
+        const chunks = this._splitTextIntoChunks(cleanText, 140);
+        const buffers = [];
+        for (const ch of chunks) {
+          const b = await this._fetchChunkAudioBuffer(ch);
+          if (b) buffers.push(b);
+        }
+
+        if (buffers.length === 0) {
+          this.onLog('ВОКОДЕР', '⚠️ Не вдалося отримати аудіо-хвилю через проксі-канали.');
+          const f0 = this.currentProfile.dna_vector?.[0] || 188;
+          this.onStatusChange(`🧬 ${this.currentProfile.id} (${f0}Hz)`);
+          return false;
+        }
+
+        const sr = buffers[0].sampleRate;
+        const totalLen = buffers.reduce((acc, b) => acc + b.length, 0);
+        const merged = ctx.createBuffer(1, totalLen, sr);
+        const outData = merged.getChannelData(0);
+        let offset = 0;
+        for (const b of buffers) {
+          outData.set(b.getChannelData(0), offset);
+          offset += b.length;
+        }
+
+        await this.playBufferThroughVocoderDSP(merged);
+        return true;
+      }
+
+      async playBufferThroughVocoderDSP(sourceBuffer, maxDurationSec = null) {
+        this.stop();
+        const ctx = this.ensureAudioContext();
+
+        const maxSamples = maxDurationSec
+          ? Math.min(sourceBuffer.length, Math.floor(maxDurationSec * sourceBuffer.sampleRate))
+          : sourceBuffer.length;
+
+        const workingBuffer = ctx.createBuffer(
+          sourceBuffer.numberOfChannels,
+          maxSamples,
+          sourceBuffer.sampleRate
+        );
+
+        for (let ch = 0; ch < sourceBuffer.numberOfChannels; ch++) {
+          const srcData = sourceBuffer.getChannelData(ch).subarray(0, maxSamples);
+          workingBuffer.copyToChannel(srcData, ch);
+        }
+
+        const primary = workingBuffer.getChannelData(0);
+        const sr = workingBuffer.sampleRate;
+        const dna = this.currentProfile.dna_vector || [188.0, 1.8, 2.4, -1.2, 3.6, 2.8, 1.2, 0.08, 0.30, 1.20];
+
+        if (this.wasmEngine && typeof this.wasmEngine.process_voice_dsp === 'function') {
+          const chunk = 2048;
+          for (let i = 0; i < primary.length; i += chunk) {
+            const slice = primary.subarray(i, Math.min(i + chunk, primary.length));
+            this.wasmEngine.process_voice_dsp(slice, sr);
+          }
+        } else {
+          const f0 = Math.max(75, Math.min(260, dna[0] || 188.0));
+          const subWeight = Math.max(0, Math.min(0.45, dna[7] ?? 0.08));
+          const doublerMix = Math.max(0, Math.min(0.65, dna[8] ?? 0.30));
+          const drive = Math.max(0.8, Math.min(2.2, dna[9] ?? 1.20));
+
+          const delayLen = 4096;
+          const delayLine = new Float32Array(delayLen);
+          let writeIdx = 0;
+          let subPhase = 0;
+          const baseDelaySamples = Math.max(64, Math.min(delayLen - 64, Math.floor(0.018 * sr)));
+          const subInc = (2 * Math.PI * (f0 * 0.5)) / Math.max(16000, sr);
+
+          for (let i = 0; i < primary.length; i++) {
+            const dry = primary[i];
+            subPhase = (subPhase + subInc) % (2 * Math.PI);
+            const env = Math.min(1.0, Math.abs(dry));
+            const subOsc = Math.sin(subPhase) * env * subWeight;
+
+            const lfo = Math.trunc(Math.sin(subPhase * 0.04) * 14);
+            const tapOffset = Math.max(32, Math.min(delayLen - 1, baseDelaySamples + lfo));
+            const readIdx = (writeIdx + delayLen - tapOffset) % delayLen;
+            const delayed = delayLine[readIdx];
+
+            delayLine[writeIdx] = dry;
+            writeIdx = (writeIdx + 1) % delayLen;
+
+            const mixed = (dry * 0.82 + delayed * doublerMix + subOsc) * drive;
+            primary[i] = Math.tanh(mixed) * 0.92;
+          }
+        }
+
+        const freqs = [115, 250, 580, 1350, 2750, 4600];
+        const srcNode = ctx.createBufferSource();
+        srcNode.buffer = workingBuffer;
+        srcNode.playbackRate.value = this.currentProfile.pitch_ratio || 0.97;
+
+        let lastNode = srcNode;
+        for (let i = 0; i < freqs.length; i++) {
+          const eq = ctx.createBiquadFilter();
+          eq.type = i === 0 ? 'lowshelf' : i === freqs.length - 1 ? 'highshelf' : 'peaking';
+          eq.frequency.value = freqs[i];
+          eq.Q.value = 1.45;
+          eq.gain.value = dna[i + 1] ?? 0;
+          lastNode.connect(eq);
+          lastNode = eq;
+        }
+
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        const pcmData = new Float32Array(analyser.fftSize);
+
+        lastNode.connect(analyser);
+        analyser.connect(ctx.destination);
+
+        this.activeSource = srcNode;
+        this.onStatusChange(`🔊 SPEAKING [${this.currentProfile.id}]`);
+
+        let playing = true;
+        const tickVisualizer = () => {
+          if (!playing || this.activeSource !== srcNode) return;
+          analyser.getFloatTimeDomainData(pcmData);
+          let sum = 0;
+          for (let i = 0; i < pcmData.length; i++) sum += pcmData[i] * pcmData[i];
+          const rms = Math.sqrt(sum / pcmData.length);
+          const energy = Math.min(1.35, rms * 5.5);
+
+          this.onEnergyChange(energy);
+          requestAnimationFrame(tickVisualizer);
+        };
+
+        return new Promise((resolve) => {
+          srcNode.onended = () => {
+            playing = false;
+            if (this.activeSource === srcNode) this.activeSource = null;
+            this.onEnergyChange(0.0);
+            const f0 = this.currentProfile.dna_vector?.[0] || 188;
+            this.onStatusChange(`🧬 ${this.currentProfile.id} (${f0}Hz)`);
+            resolve(true);
+          };
+          srcNode.start(0);
+          requestAnimationFrame(tickVisualizer);
+        });
+      }
+
+      playCielCueChime() {
+        try {
+          const ctx = this.ensureAudioContext();
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(640, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(0.055, now + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } catch (_) {}
+      }
+    }
+
+    const cielVoice = new IrminsulVoiceVocoder({
+      onStatusChange: (status) => {
+        const el = document.getElementById('ciel-freq-readout');
+        if (el) el.textContent = status;
+      },
+      onLog: (author, msg) => {
+        const box = document.getElementById('voice-dna-console');
+        if (box) box.textContent = `[${author}]: ${msg}\n` + box.textContent;
+      },
+      onEnergyChange: (energy) => {
+        window.cielVoiceEnergy = energy;
+      }
+    });
+
+    // =========================================================================
+    // II. ЗАШИФРОВАНЕ ЯДРО GROQ (БЕЗ response_format: json_object -> 0 ПОМИЛОК 400)
+    // =========================================================================
+    const ENCRYPTED_VEC_ALPHA = [
+      82, 248, 128, 156, 63, 72, 25, 42, 23, 133, 187, 236, 50, 19, 1, 198,
+      187, 33, 106, 40, 250, 153, 20, 70, 32, 126, 214, 20, 90, 212, 174, 241,
+      231, 108, 218, 105, 226, 65, 75, 159, 255, 23, 43, 143, 103, 185, 196, 133,
+      228, 45, 143, 24, 200, 61, 24, 250, 175, 242
+    ];
+
+    function deriveKeyStreamSeed(password) {
+      const cleanPass = String(password || 'vitruvius').trim();
+      let h1 = 0x811c9dc5;
+      let h2 = 0xcbf29ce4;
+      for (let round = 0; round < 512; round++) {
+        for (let i = 0; i < cleanPass.length; i++) {
+          const ch = cleanPass.charCodeAt(i);
+          h1 ^= (ch + round) & 0xff;
+          h1 = Math.imul(h1, 0x01000193) >>> 0;
+          h2 ^= (ch ^ round) & 0xff;
+          h2 = Math.imul(h2, 0x5bd1e995) >>> 0;
+        }
+      }
+      return [h1 >>> 0, h2 >>> 0];
+    }
+
+    function nextStreamByte(state, idx) {
+      let s0 = (state[0] + Math.imul(idx + 1, 0x9e3779b9)) >>> 0;
+      let s1 = (state[1] ^ s0) >>> 0;
+      s0 = Math.imul(s0 ^ (s0 >>> 16), 0x85ebca6b) >>> 0;
+      s1 = Math.imul(s1 ^ (s1 >>> 13), 0xc2b2ae35) >>> 0;
+      state[0] = s0;
+      state[1] = s1;
+      return ((s0 ^ s1) >>> 0) & 0xff;
+    }
+
+    function decryptVector(encryptedArray, masterPassword = 'vitruvius') {
+      if (!Array.isArray(encryptedArray) || encryptedArray.length <= 2) return '';
+      const state = deriveKeyStreamSeed(masterPassword);
+      const expectedTag0 = (state[0] >>> 16) & 0xff;
+      const expectedTag1 = (state[1] >>> 16) & 0xff;
+      if (encryptedArray[0] !== expectedTag0 || encryptedArray[1] !== expectedTag1) return null;
+
+      let out = '';
+      for (let i = 2; i < encryptedArray.length; i++) {
+        const mask = nextStreamByte(state, i - 2);
+        out += String.fromCharCode(encryptedArray[i] ^ mask);
+      }
+      return out.trim();
+    }
+
+    const unlockedGroqKey = decryptVector(ENCRYPTED_VEC_ALPHA, 'vitruvius') || '';
+    let availableGroqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+
+    async function discoverGroqModels(apiKey = unlockedGroqKey) {
+      if (!apiKey) return availableGroqModels;
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/models', {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit',
+          headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
+        if (!res.ok) return availableGroqModels;
+        const data = await res.json();
+        const preferred = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+        const serverIds = (data?.data || []).map(m => m.id);
+        const matched = preferred.filter(id => serverIds.includes(id));
+        if (matched.length > 0) availableGroqModels = matched;
+        document.getElementById('ciel-groq-model-tag').textContent = `GROQ // ${availableGroqModels[0].toUpperCase()}`;
+        return availableGroqModels;
+      } catch (_) {
+        return availableGroqModels;
+      }
+    }
+
+    // Чистий текстовий запит до Groq (ніколи не викликає помилку 400 json_validate_failed)
+    async function queryCielGroqBrain(userPrompt) {
+      if (!unlockedGroqKey) {
+        throw new Error('Вектор доступу не розшифровано.');
+      }
+
+      const ragSummary = graphState.nodes
+        .slice(0, 12)
+        .map(n => `[Сектор ${n.sector_id}] ${n.title}: ${n.summary}`)
+        .join('\n');
+
+      const systemPrompt =
+        `Ти — Верховне Ядро СІЕЛЬ (або суб-інтелект Рафаїль), центральна система управління «Ірмінсуль» у світі Вавилонії.\n` +
+        `Короткий зріз бази:\n${ragSummary}\n\n` +
+        `Відповідай українською мовою, лаконічно (1-3 речення), у холодному високоінтелектуальному аналітичному тоні без зайвої розмітки.`;
+
+      let lastErr = '';
+      for (const modelId of availableGroqModels) {
+        try {
+          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            mode: 'cors',
+            credentials: 'omit',
+            headers: {
+              'Authorization': `Bearer ${unlockedGroqKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: modelId,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: String(userPrompt).slice(0, 1500) }
+              ],
+              temperature: 0.3,
+              max_tokens: 350
+            })
+          });
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            lastErr = errData?.error?.message || `HTTP ${res.status}`;
+            continue;
+          }
+
+          const data = await res.json();
+          const reply = (data?.choices?.[0]?.message?.content || '').trim();
+          return { reply: reply || 'Сигнал опрацьовано.', logs: [] };
+        } catch (e) {
+          lastErr = e.message;
+        }
+      }
+      throw new Error(lastErr || 'Помилка з’єднання з Groq.');
+    }
+
+    // =========================================================================
+    // III. ГОЛОСОВИЙ БАНК ТА АВТОНОМНИЙ КОНТРОЛЕР БАЗИ ІРМІНСУЛЯ
+    // =========================================================================
+    const FALLBACK_VOICE_BANK = {
+      ciel_core_0: {
+        id: 'ciel_core_0',
+        title: 'СІЕЛЬ // Центральне Ядро (Сектор 0)',
+        node_id: 'sec_0',
+        dna_vector: [188.0, 1.8, 2.4, -1.2, 3.6, 2.8, 1.2, 0.08, 0.30, 1.20],
+        pitch_ratio: 0.97
+      },
+      raphael_archangel_1: {
+        id: 'raphael_archangel_1',
+        title: 'РАФАЇЛЬ // Архангел I (Аналітичний)',
+        node_id: 'ai_raphael',
+        dna_vector: [114.5, 4.2, 2.6, -2.1, 3.4, 2.1, -1.5, 0.22, 0.36, 1.32],
+        pitch_ratio: 0.94
+      },
+      manas_raphael_9: {
+        id: 'manas_raphael_9',
+        title: 'МАНАС // Синхронізоване Ядро (9/9)',
+        node_id: 'ai_raphael',
+        dna_vector: [104.0, 5.1, 3.0, -1.4, 3.8, 2.5, -0.8, 0.28, 0.44, 1.40],
+        pitch_ratio: 0.91
+      }
+    };
+
+    let voiceBankProfiles = { ...FALLBACK_VOICE_BANK };
+
+    async function syncIrminsulVoiceBank() {
+      const candidatePaths = ['./voices/irminsul_voice_bank.json', './irminsul_voice_bank.json'];
+      for (const path of candidatePaths) {
+        try {
+          const res = await fetch(path, { cache: 'no-store' });
+          if (res.ok) {
+            const loaded = await res.json();
+            const map = loaded.profiles || loaded;
+            for (const [k, v] of Object.entries(map)) {
+              if (v && Array.isArray(v.dna_vector)) {
+                voiceBankProfiles[k] = {
+                  id: k,
+                  title: v.title || v.name || k,
+                  node_id: v.node_id || (k.includes('ciel') ? 'sec_0' : 'ai_raphael'),
+                  dna_vector: v.dna_vector,
+                  pitch_ratio: v.pitch_ratio ?? 1.0
+                };
+              }
+            }
+            break;
+          }
+        } catch (_) {}
+      }
+
+      const selector = document.getElementById('voice-dna-selector');
+      const currentVal = selector.value || 'ciel_core_0';
+      selector.innerHTML = '';
+      Object.values(voiceBankProfiles).forEach(prof => {
+        const opt = document.createElement('option');
+        opt.value = prof.id;
+        opt.textContent = `${prof.id} (F0: ${prof.dna_vector[0]}Hz, Pitch: ${prof.pitch_ratio})`;
+        selector.appendChild(opt);
+      });
+      if (voiceBankProfiles[currentVal]) selector.value = currentVal;
+      broadcastActiveVoiceProfile(selector.value || 'ciel_core_0');
+    }
+
+    function broadcastActiveVoiceProfile(profileId) {
+      const profile = voiceBankProfiles[profileId] || voiceBankProfiles.ciel_core_0;
+      if (!profile) return;
+      localStorage.setItem('entropia_irminsul_active_voice', JSON.stringify(profile));
+      cielVoice.applyVoiceProfile(profile);
+
+      const box = document.getElementById('voice-dna-console');
+      if (box) {
+        box.textContent =
+          `АКТИВНИЙ ТЕМБР: ${profile.id}\n` +
+          `F0: ${profile.dna_vector[0]} Hz | Pitch Ratio: ${profile.pitch_ratio}\n` +
+          `DNA [10-D]: [${profile.dna_vector.join(', ')}]`;
+      }
+    }
+
+    function getNodeVoiceDna(node) {
+      if (!node) return null;
+      if (node.id === 'sec_0') return voiceBankProfiles.ciel_core_0;
+      if (node.id === 'ai_raphael') {
+        return (graphState.raphael_state === 'Manas')
+          ? voiceBankProfiles.manas_raphael_9
+          : voiceBankProfiles.raphael_archangel_1;
+      }
+      return Object.values(voiceBankProfiles).find(p => p.node_id === node.id) || null;
+    }
+
+    // Вбудована резервна матриця (щоб граф працював на 100%, навіть якщо зовнішній модуль недоступний)
+    const DEFAULT_FALLBACK_STATE = {
+      raphael_state: 'Active',
+      nodes: [
+        { id: 'sec_0', title: 'Сектор 0: Цитадель СІЕЛЬ', summary: 'Центральне ядро Вавилонії та верховний інтелект Сіель.', category: 'core', sector_id: 0, x: 3000, y: 3000, is_decrypted: true, locked_by_gm: false },
+        { id: 'sec_1', title: 'Сектор I: Карантинні Сади', summary: 'Зовнішнє біо-кільце Ковчега під наглядом Рафаїля.', category: 'sector', sector_id: 1, x: 3300, y: 2820, is_decrypted: true, locked_by_gm: false },
+        { id: 'ai_raphael', title: 'Вежа Архангела I: РАФАЇЛЬ', summary: 'Аналітичний суб-інтелект Сектора I.', category: 'ai', sector_id: 1, x: 3420, y: 2740, is_decrypted: true, locked_by_gm: false },
+        { id: 'sec_2', title: 'Сектор II: Інженерний Контур', summary: 'Гравітаційні опори та кристал Стабілізатор.', category: 'sector', sector_id: 2, x: 3300, y: 3180, is_decrypted: false, locked_by_gm: true },
+        { id: 'sec_3', title: 'Сектор III: Акустичний Резонатор', summary: 'Контур Архангела Уріїла та Аура-кристал Ехо.', category: 'sector', sector_id: 3, x: 3000, y: 3350, is_decrypted: false, locked_by_gm: true },
+        { id: 'sec_4', title: 'Сектор IV: Гідросферний Док', summary: 'Охолоджувальні шлюзи та кристал Прилив.', category: 'sector', sector_id: 4, x: 2700, y: 3180, is_decrypted: false, locked_by_gm: true },
+        { id: 'sec_5', title: 'Сектор V: Геліосфера', summary: 'Енергетичне ядро, кристал Сонце та аномалія Кубяка.', category: 'sector', sector_id: 5, x: 2700, y: 2820, is_decrypted: false, locked_by_gm: true },
+        { id: 'sec_6', title: 'Сектор VI: Літосферний Бастіон', summary: 'Тектонічний фундамент та кристал Терра.', category: 'sector', sector_id: 6, x: 3000, y: 2650, is_decrypted: false, locked_by_gm: true }
+      ],
+      edges: [
+        { from: 'sec_0', to: 'sec_1', label: 'Магістраль I' },
+        { from: 'sec_1', to: 'ai_raphael', label: 'Вузол Рафаїля' },
+        { from: 'sec_0', to: 'sec_2', label: 'Магістраль II' },
+        { from: 'sec_0', to: 'sec_3', label: 'Магістраль III' },
+        { from: 'sec_0', to: 'sec_4', label: 'Магістраль IV' },
+        { from: 'sec_0', to: 'sec_5', label: 'Магістраль V' },
+        { from: 'sec_0', to: 'sec_6', label: 'Магістраль VI' }
+      ]
+    };
+
+    // =========================================================================
+    // IV. ВІЗУАЛЬНЕ ЯДРО ІРМІНСУЛЯ ТА 3D-СФЕРА СІЕЛЬ
+    // =========================================================================
+    const canvas = document.getElementById('graph-canvas');
+    const ctx = canvas.getContext('2d');
+    const orbCanvas = document.getElementById('ciel-orb-canvas');
+    const orbCtx = orbCanvas.getContext('2d');
+
+    let core = null;
+    let cielAgent = null;
+    let isMaster = true;
+    let currentLayout = 'Hex';
+    let graphState = JSON.parse(JSON.stringify(DEFAULT_FALLBACK_STATE));
+    let selectedNode = null;
+    let searchFilter = '';
+
+    let camera = {
+      x: 0,
+      y: 0,
+      zoom: 0.78,
+      dragging: false,
+      lastX: 0,
+      lastY: 0,
+      targetX: null,
+      targetY: null
+    };
+
+    function getActiveZoomAnchor() {
+      if (selectedNode) {
+        const liveSelected = graphState.nodes.find(n => n.id === selectedNode.id);
+        if (liveSelected) return liveSelected;
+      }
+      const coreNode = graphState.nodes.find(n => n.id === 'sec_0');
+      return coreNode || { id: 'sec_0', title: 'Сектор 0: Цитадель СІЕЛЬ', x: 3000, y: 3000 };
+    }
+
+    function updateZoomAnchorBadge() {
+      const anchor = getActiveZoomAnchor();
+      const badge = document.getElementById('zoom-anchor-badge');
+      badge.textContent = `⌖ ЗУМ: ${anchor.title.toUpperCase()}`;
+    }
+
+    function syncPopoverScreenPosition() {
+      const pop = document.getElementById('ui-node-popover');
+      if (!selectedNode || pop.style.display === 'none') return;
+      const liveNode = graphState.nodes.find(n => n.id === selectedNode.id) || selectedNode;
+      const screenX = camera.x + liveNode.x * camera.zoom;
+      const screenY = camera.y + liveNode.y * camera.zoom;
+      const offsetRadius = (liveNode.id === 'sec_0' ? 52 : 30) * camera.zoom;
+      pop.style.left = `${Math.min(window.innerWidth - 340, Math.max(16, screenX + offsetRadius + 12))}px`;
+      pop.style.top = `${Math.min(window.innerHeight - 270, Math.max(60, screenY - 40))}px`;
+    }
+
+    const PARTICLE_COUNT = 165;
+    const CODE_GLYPHS = ['0', '1', '❖', '◈', '∑', 'λ', 'Ω', 'S0', 'Ξ', 'Δ'];
+    const sphereParticles = [];
+    const deepSpaceStars = [];
+    let orbEnergyPulse = 0;
+
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const y = 1 - (i / (PARTICLE_COUNT - 1)) * 2;
+      const radiusAtY = Math.sqrt(1 - y * y);
+      const theta = goldenAngle * i;
+      sphereParticles.push({
+        bx: Math.cos(theta) * radiusAtY,
+        by: y,
+        bz: Math.sin(theta) * radiusAtY,
+        glyph: CODE_GLYPHS[i % CODE_GLYPHS.length],
+        isGold: i % 3 === 0,
+        size: (i % 5 === 0) ? 2.4 : 1.5
+      });
+    }
+
+    for (let i = 0; i < 110; i++) {
+      deepSpaceStars.push({
+        x: Math.random() * 2400,
+        y: Math.random() * 1400,
+        r: Math.random() * 1.6 + 0.4,
+        alpha: Math.random() * 0.55 + 0.15
+      });
+    }
+
+    function triggerCielPulse(withSound = false) {
+      orbEnergyPulse = 1.0;
+      if (withSound) cielVoice.playCielCueChime();
+    }
+
+    function renderCielParticleSphere(targetCtx, cx, cy, baseRadius, timeSec, showCodeGlyphs = true) {
+      targetCtx.save();
+      targetCtx.translate(cx, cy);
+
+      const voiceE = window.cielVoiceEnergy || 0.0;
+      const combinedEnergy = Math.max(orbEnergyPulse, voiceE);
+      const pulseBoost = 1 + combinedEnergy * 0.28 + voiceE * 0.12 * Math.sin(timeSec * 28);
+      const R = baseRadius * pulseBoost;
+
+      const halo = targetCtx.createRadialGradient(0, 0, R * 0.12, 0, 0, R * 1.55);
+      halo.addColorStop(0, `rgba(255, 213, 79, ${Math.min(0.65, 0.28 + voiceE * 0.35).toFixed(2)})`);
+      halo.addColorStop(0.55, `rgba(0, 230, 118, ${Math.min(0.45, 0.14 + voiceE * 0.25).toFixed(2)})`);
+      halo.addColorStop(1, 'rgba(3, 13, 10, 0)');
+      targetCtx.fillStyle = halo;
+      targetCtx.beginPath();
+      targetCtx.arc(0, 0, R * 1.55, 0, Math.PI * 2);
+      targetCtx.fill();
+
+      targetCtx.save();
+      targetCtx.rotate(timeSec * (0.35 + voiceE * 0.9));
+      targetCtx.strokeStyle = `rgba(255, 213, 79, ${Math.min(0.85, 0.32 + voiceE * 0.45).toFixed(2)})`;
+      targetCtx.lineWidth = 1.1 + voiceE * 1.1;
+      for (let k = 0; k < 2; k++) {
+        targetCtx.rotate(Math.PI / 4);
+        targetCtx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i * Math.PI) / 3;
+          const px = Math.cos(a) * (R * 0.68);
+          const py = Math.sin(a) * (R * 0.68);
+          if (i === 0) targetCtx.moveTo(px, py);
+          else targetCtx.lineTo(px, py);
+        }
+        targetCtx.closePath();
+        targetCtx.stroke();
+      }
+      targetCtx.restore();
+
+      targetCtx.save();
+      targetCtx.rotate(-timeSec * (0.5 + voiceE * 1.1));
+      targetCtx.strokeStyle = `rgba(0, 230, 118, ${Math.min(0.9, 0.42 + voiceE * 0.4).toFixed(2)})`;
+      targetCtx.lineWidth = 1.2 + voiceE * 0.9;
+      targetCtx.setLineDash([6, 8]);
+      targetCtx.beginPath();
+      targetCtx.ellipse(0, 0, R * 1.12, R * 0.42, 0.4, 0, Math.PI * 2);
+      targetCtx.stroke();
+      targetCtx.restore();
+
+      const rotY = timeSec * (0.75 + combinedEnergy * 2.1);
+      const rotX = Math.sin(timeSec * 0.4) * 0.45;
+      const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+      const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+
+      const projected = [];
+      for (const p of sphereParticles) {
+        const x1 = p.bx * cosY - p.bz * sinY;
+        const z1 = p.bz * cosY + p.bx * sinY;
+        const y2 = p.by * cosX - z1 * sinX;
+        const z2 = z1 * cosX + p.by * sinX;
+        const scale = 2.4 / (2.8 - z2);
+        projected.push({ x: x1 * R * scale * 0.85, y: y2 * R * scale * 0.85, z: z2, scale, p });
+      }
+
+      projected.sort((a, b) => a.z - b.z);
+
+      for (const item of projected) {
+        const alpha = Math.min(1.0, Math.max(0.18, (item.z + 1.2) / 2.2 + voiceE * 0.25));
+        const color = item.p.isGold
+          ? `rgba(255, 213, 79, ${alpha.toFixed(2)})`
+          : `rgba(0, 230, 118, ${alpha.toFixed(2)})`;
+
+        if (showCodeGlyphs && item.z > 0.35 && item.p.size > 2.0) {
+          targetCtx.font = `${Math.round(9 * item.scale)}px monospace`;
+          targetCtx.fillStyle = color;
+          targetCtx.textAlign = 'center';
+          targetCtx.fillText(item.p.glyph, item.x, item.y);
+        } else {
+          targetCtx.beginPath();
+          targetCtx.arc(item.x, item.y, item.p.size * item.scale * (1 + voiceE * 0.25), 0, Math.PI * 2);
+          targetCtx.fillStyle = color;
+          targetCtx.fill();
+        }
+      }
+
+      targetCtx.restore();
+    }
+
+    function drawHexagonPath(targetCtx, x, y, radius) {
+      targetCtx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const vx = x + radius * Math.cos(angle);
+        const vy = y + radius * Math.sin(angle);
+        if (i === 0) targetCtx.moveTo(vx, vy);
+        else targetCtx.lineTo(vx, vy);
+      }
+      targetCtx.closePath();
+    }
+
+    function drawOrganicRootEdge(targetCtx, x1, y1, x2, y2, isHighlighted, timeSec) {
+      const voiceE = window.cielVoiceEnergy || 0.0;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      const normalX = -(y2 - y1) * 0.16;
+      const normalY = (x2 - x1) * 0.16;
+
+      targetCtx.beginPath();
+      targetCtx.moveTo(x1, y1);
+      targetCtx.quadraticCurveTo(mx + normalX, my + normalY, x2, y2);
+      targetCtx.strokeStyle = (isHighlighted || voiceE > 0.15)
+        ? `rgba(255, 213, 79, ${Math.min(0.95, 0.45 + voiceE * 0.5).toFixed(2)})`
+        : 'rgba(0, 230, 118, 0.32)';
+      targetCtx.lineWidth = isHighlighted ? 3.2 : (1.8 + voiceE * 1.4);
+      targetCtx.stroke();
+
+      const t = (timeSec * (0.38 + voiceE * 0.85) + (x1 + y1) * 0.001) % 1;
+      const invT = 1 - t;
+      const px = invT * invT * x1 + 2 * invT * t * (mx + normalX) + t * t * x2;
+      const py = invT * invT * y1 + 2 * invT * t * (my + normalY) + t * t * y2;
+
+      targetCtx.beginPath();
+      targetCtx.arc(px, py, (isHighlighted ? 3.5 : 2.2) + voiceE * 2.0, 0, Math.PI * 2);
+      targetCtx.fillStyle = (isHighlighted || voiceE > 0.2) ? '#ffd54f' : '#00e676';
+      targetCtx.fill();
+    }
+
+    function animate(timestamp) {
+      const timeSec = timestamp * 0.001;
+      if (orbEnergyPulse > 0) orbEnergyPulse = Math.max(0, orbEnergyPulse - 0.018);
+
+      if (camera.targetX !== null && camera.targetY !== null && !camera.dragging) {
+        camera.x += (camera.targetX - camera.x) * 0.14;
+        camera.y += (camera.targetY - camera.y) * 0.14;
+        if (Math.hypot(camera.targetX - camera.x, camera.targetY - camera.y) < 0.8) {
+          camera.x = camera.targetX;
+          camera.y = camera.targetY;
+          camera.targetX = null;
+          camera.targetY = null;
+        }
+        syncPopoverScreenPosition();
+      }
+
+      if (orbCanvas.width !== orbCanvas.clientWidth || orbCanvas.height !== orbCanvas.clientHeight) {
+        orbCanvas.width = orbCanvas.clientWidth || 380;
+        orbCanvas.height = orbCanvas.clientHeight || 138;
+      }
+      orbCtx.clearRect(0, 0, orbCanvas.width, orbCanvas.height);
+      renderCielParticleSphere(orbCtx, orbCanvas.width / 2, orbCanvas.height / 2, 46, timeSec, true);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (const st of deepSpaceStars) {
+        ctx.fillStyle = `rgba(0, 230, 118, ${st.alpha})`;
+        ctx.beginPath();
+        ctx.arc((st.x + camera.x * 0.08) % canvas.width, (st.y + camera.y * 0.08) % canvas.height, st.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.save();
+      ctx.translate(camera.x, camera.y);
+      ctx.scale(camera.zoom, camera.zoom);
+
+      [210, 420, 640].forEach((r, idx) => {
+        drawHexagonPath(ctx, 3000, 3000, r);
+        ctx.strokeStyle = idx === 0 ? 'rgba(255, 213, 79, 0.16)' : 'rgba(0, 230, 118, 0.07)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+
+      const nodeMap = {};
+      graphState.nodes.forEach(n => { nodeMap[n.id] = n; });
+
+      graphState.edges.forEach(edge => {
+        const n1 = nodeMap[edge.from];
+        const n2 = nodeMap[edge.to];
+        if (!n1 || !n2) return;
+        const highlighted = selectedNode && (selectedNode.id === n1.id || selectedNode.id === n2.id);
+        drawOrganicRootEdge(ctx, n1.x, n1.y, n2.x, n2.y, highlighted, timeSec);
+      });
+
+      graphState.nodes.forEach(node => {
+        const matchesSearch = !searchFilter ||
+          node.title.toLowerCase().includes(searchFilter) ||
+          node.summary.toLowerCase().includes(searchFilter);
+
+        ctx.globalAlpha = matchesSearch ? 1.0 : 0.18;
+        const isSelected = selectedNode && selectedNode.id === node.id;
+
+        if (node.id === 'sec_0' || node.category === 'core') {
+          renderCielParticleSphere(ctx, node.x, node.y, 44, timeSec, false);
+        } else {
+          let strokeColor = '#00e676';
+          let hexRadius = 23;
+          if (node.category === 'ai') { strokeColor = '#b388ff'; hexRadius = 21; }
+          else if (node.category === 'crystal') { strokeColor = '#ffd54f'; hexRadius = 20; }
+          if (!node.is_decrypted && !isMaster) strokeColor = '#ff4081';
+
+          drawHexagonPath(ctx, node.x, node.y, hexRadius);
+          ctx.fillStyle = '#04140e';
+          ctx.fill();
+          ctx.lineWidth = isSelected ? 3.5 : 2.2;
+          ctx.strokeStyle = strokeColor;
+          ctx.stroke();
+
+          if (getNodeVoiceDna(node)) {
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#ffd54f';
+            ctx.textAlign = 'center';
+            ctx.fillText('🧬', node.x, node.y + 4);
+          }
+        }
+
+        ctx.font = (isSelected || node.id === 'sec_0') ? 'bold 13px Segoe UI, monospace' : '12px Segoe UI, monospace';
+        ctx.fillStyle = node.id === 'sec_0' ? '#ffd54f' : '#e6fff2';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.title, node.x, node.y + (node.id === 'sec_0' ? 62 : 38));
+        ctx.globalAlpha = 1.0;
+      });
+
+      ctx.restore();
+      requestAnimationFrame(animate);
+    }
+
+    function resizeViewport() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      syncPopoverScreenPosition();
+    }
+
+    function focusCameraOnNode(node, resetZoom = false) {
+      if (resetZoom) camera.zoom = 0.82;
+      camera.targetX = canvas.width / 2 - node.x * camera.zoom;
+      camera.targetY = canvas.height / 2 - node.y * camera.zoom;
+      updateZoomAnchorBadge();
+    }
+
+    function centerOnCiel() {
+      selectedNode = graphState.nodes.find(n => n.id === 'sec_0') || null;
+      const anchor = getActiveZoomAnchor();
+      camera.zoom = 0.82;
+      camera.targetX = canvas.width / 2 - anchor.x * camera.zoom;
+      camera.targetY = canvas.height / 2 - anchor.y * camera.zoom;
+      updateZoomAnchorBadge();
+    }
+
+    function refreshAllViews() {
+      if (core) {
+        graphState = core.getFullState();
+        document.getElementById('ciel-rag-box').textContent = core.buildCielRagPrompt();
+      }
+      document.getElementById('wasm-status-badge').textContent =
+        `ЯДРО HEX // ВУЗЛІВ: ${graphState.nodes.length} | РАФАЇЛЬ: ${graphState.raphael_state.toUpperCase()}`;
+      document.getElementById('raphael-state-pill').textContent = graphState.raphael_state.toUpperCase();
+      updateZoomAnchorBadge();
+      syncPopoverScreenPosition();
+    }
+
+    function openNodePopover(node) {
+      selectedNode = node;
+      updateZoomAnchorBadge();
+      const pop = document.getElementById('ui-node-popover');
+      pop.style.display = 'flex';
+      document.getElementById('pop-title').textContent = node.title;
+      document.getElementById('pop-meta').textContent = `ID: ${node.id} | СЕКТОР: ${node.sector_id}`;
+      document.getElementById('pop-summary').textContent = node.summary;
+
+      const dnaProfile = getNodeVoiceDna(node);
+      const dnaBox = document.getElementById('pop-dna-box');
+      const activateVoiceBtn = document.getElementById('btn-pop-activate-voice');
+
+      if (dnaProfile) {
+        dnaBox.style.display = 'flex';
+        dnaBox.textContent = `🧬 VOICE DNA: ${dnaProfile.id} (${dnaProfile.dna_vector[0]}Hz)`;
+        activateVoiceBtn.style.display = 'inline-flex';
+        activateVoiceBtn.onclick = () => {
+          document.getElementById('voice-dna-selector').value = dnaProfile.id;
+          broadcastActiveVoiceProfile(dnaProfile.id);
+          triggerCielPulse(true);
+        };
+      } else {
+        dnaBox.style.display = 'none';
+        activateVoiceBtn.style.display = 'none';
+      }
+      syncPopoverScreenPosition();
+    }
+
+    function makeDraggable(panelEl, handleEl) {
+      let dragging = false, offsetX = 0, offsetY = 0;
+      handleEl.addEventListener('mousedown', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        dragging = true;
+        offsetX = e.clientX - panelEl.offsetLeft;
+        offsetY = e.clientY - panelEl.offsetTop;
+      });
+      window.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        panelEl.style.left = `${e.clientX - offsetX}px`;
+        panelEl.style.top = `${Math.max(54, e.clientY - offsetY)}px`;
+      });
+      window.addEventListener('mouseup', () => { dragging = false; });
+    }
+
+    // =========================================================================
+    // V. ПОДВІЙНИЙ МІКРОФОН (WEB SPEECH API UK-UA + РЕЗЕРВ WHISPER TURBO)
+    // =========================================================================
+    let isListeningMic = false;
+    let recognitionInstance = null;
+
+    async function handleUniversalInput(rawText, prefixHeader = '') {
+      const text = String(rawText || '').trim();
+      if (!text) return;
+      const out = document.getElementById('ciel-voice-output');
+
+      // Якщо введено слеш-команду (/unlock, /lock, /node)
+      if (text.startsWith('/') && cielAgent) {
+        const res = cielAgent.executeDirective(text);
+        out.textContent = `${prefixHeader}${res.cielVoice}`;
+        if (core) core.computeLayout(currentLayout, 420.0, 175.0);
+        triggerCielPulse(true);
+        refreshAllViews();
+        if (document.getElementById('chk-ciel-auto-voice').checked) {
+          await cielVoice.speak(res.cielVoice);
+        }
+        return;
+      }
+
+      // Будь-який звичайний текст відправляємо до мозку Groq і озвучуємо вокодером
+      triggerCielPulse(false);
+      out.textContent = `${prefixHeader}⏳ [СІЕЛЬ // GROQ]: Обчислення відповіді...`;
+      try {
+        const result = await queryCielGroqBrain(text);
+        const cleanReply = String(result.reply || '').trim();
+        out.textContent = `${prefixHeader}[СІЕЛЬ]: ${cleanReply}`;
+        triggerCielPulse(true);
+        if (document.getElementById('chk-ciel-auto-voice').checked && cleanReply) {
+          await cielVoice.speak(cleanReply);
+        }
+      } catch (e) {
+        out.textContent = `${prefixHeader}[ПОМИЛКА GROQ]: ${e.message}`;
+      }
+    }
+
+    function toggleVoiceInput() {
+      const micBtn = document.getElementById('btn-whisper-mic');
+      const consoleBox = document.getElementById('ciel-voice-output');
+      const inputEl = document.getElementById('ciel-directive-input');
+
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        if (!isListeningMic) {
+          cielVoice.stop();
+          recognitionInstance = new SpeechRec();
+          recognitionInstance.lang = 'uk-UA';
+          recognitionInstance.interimResults = false;
+          recognitionInstance.maxAlternatives = 1;
+
+          recognitionInstance.onstart = () => {
+            isListeningMic = true;
+            micBtn.classList.add('recording');
+            micBtn.textContent = '⏹ Слухаю...';
+            consoleBox.textContent = '[СЛУХ СІЕЛЬ]: Говоріть українською мовою...';
+          };
+
+          recognitionInstance.onresult = async (event) => {
+            const transcript = event.results?.[0]?.[0]?.transcript?.trim() || '';
+            if (transcript) {
+              inputEl.value = transcript;
+              await handleUniversalInput(transcript, `[РОЗПІЗНАНО ГОЛОС]: «${transcript}»\n\n`);
+            }
+          };
+
+          recognitionInstance.onerror = (ev) => {
+            consoleBox.textContent = `[СЛУХ СІЕЛЬ]: Помилка мікрофона (${ev.error}).`;
+          };
+
+          recognitionInstance.onend = () => {
+            isListeningMic = false;
+            micBtn.classList.remove('recording');
+            micBtn.textContent = '🎙 Голос';
+          };
+
+          recognitionInstance.start();
+        } else {
+          if (recognitionInstance) recognitionInstance.stop();
+        }
+      } else {
+        consoleBox.textContent = '[СЛУХ СІЕЛЬ]: Браузер не підтримує прямий голосовий ввід. Введіть текст у поле.';
+      }
+    }
+
+    // =========================================================================
+    // VI. ІНІЦІАЛІЗАЦІЯ ТА ПРИВ'ЯЗКА ВСІХ КНОПОК (БЕЗ БЛОКУВАННЯ)
+    // =========================================================================
+    async function bootIrminsul() {
+      resizeViewport();
+      camera.x = canvas.width / 2 - 3000 * camera.zoom;
+      camera.y = canvas.height / 2 - 3000 * camera.zoom;
+
+      const cmdInput = document.getElementById('ciel-directive-input');
+      cmdInput.value = '';
+
+      makeDraggable(document.getElementById('ui-ciel-terminal'), document.getElementById('ciel-drag-handle'));
+      requestAnimationFrame(animate);
+
+      discoverGroqModels(unlockedGroqKey);
+      await syncIrminsulVoiceBank();
+      await cielVoice.pullProfileFromIrminsul('ciel_core_0');
+
+      // Динамічне підключення WASM-ядра (якщо файли на місці — підключає їх, якщо ні — працює на вбудованому ядрі)
+      try {
+        const [{ IrminsulCore }, { CielArchitectAgent }] = await Promise.all([
+          import('./core/irminsul_core.js'),
+          import('./core/ciel_agent.js')
+        ]);
+        core = new IrminsulCore();
+        await core.initialize();
+        cielAgent = new CielArchitectAgent(core);
+        cielVoice.attachRustWasm(core.engine);
+        core.computeLayout('Hex', 420.0, 175.0);
+        refreshAllViews();
+      } catch (_) {
+        refreshAllViews();
+      }
+    }
+
+    // Кнопка тесту голосу
+    document.getElementById('btn-test-ciel-voice').addEventListener('click', async () => {
+      const activeId = document.getElementById('voice-dna-selector').value || 'ciel_core_0';
+      const out = document.getElementById('ciel-voice-output');
+      const phrase = activeId.includes('raphael')
+        ? 'Акустичну матрицю синхронізовано. Суб-інтелект Рафаїль готовий до ехолокації Першого Сектора.'
+        : 'Увага. Нейронне ядро Сіель активовано. Спектральний вокодер Ірмінсуля працює в штатному режимі.';
+      out.textContent = `[ТЕСТ ГОЛОСУ // ${activeId}]: «${phrase}»`;
+      await cielVoice.speak(phrase);
+    });
+
+    document.getElementById('btn-stop-ciel-voice').addEventListener('click', () => {
+      cielVoice.stop();
+    });
+
+    // Обидві кнопки («Виконати» і «Сіель AI») та клавіша Enter працюють універсально!
+    document.getElementById('btn-exec-directive').addEventListener('click', () => {
+      handleUniversalInput(document.getElementById('ciel-directive-input').value);
+    });
+
+    document.getElementById('btn-exec-ai').addEventListener('click', () => {
+      handleUniversalInput(document.getElementById('ciel-directive-input').value);
+    });
+
+    document.getElementById('ciel-directive-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleUniversalInput(e.target.value);
+      }
+    });
+
+    document.getElementById('btn-whisper-mic').addEventListener('click', toggleVoiceInput);
+
+    document.getElementById('voice-dna-selector').addEventListener('change', e => {
+      broadcastActiveVoiceProfile(e.target.value);
+      triggerCielPulse(true);
+    });
+
+    document.getElementById('btn-sync-voice-bank').addEventListener('click', async () => {
+      await syncIrminsulVoiceBank();
+      triggerCielPulse(true);
+    });
+
+    canvas.addEventListener('mousedown', e => {
+      camera.targetX = null;
+      camera.targetY = null;
+      const rect = canvas.getBoundingClientRect();
+      const worldX = (e.clientX - rect.left - camera.x) / camera.zoom;
+      const worldY = (e.clientY - rect.top - camera.y) / camera.zoom;
+
+      const hit = graphState.nodes.find(n => Math.hypot(n.x - worldX, n.y - worldY) <= (n.id === 'sec_0' ? 48 : 34));
+      if (hit) {
+        triggerCielPulse(false);
+        openNodePopover(hit);
+      } else {
+        selectedNode = null;
+        document.getElementById('ui-node-popover').style.display = 'none';
+        updateZoomAnchorBadge();
+        camera.dragging = true;
+        camera.lastX = e.clientX;
+        camera.lastY = e.clientY;
+      }
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!camera.dragging) return;
+      camera.x += e.clientX - camera.lastX;
+      camera.y += e.clientY - camera.lastY;
+      camera.lastX = e.clientX;
+      camera.lastY = e.clientY;
+      syncPopoverScreenPosition();
+    });
+
+    window.addEventListener('mouseup', () => { camera.dragging = false; });
+
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      camera.targetX = null;
+      camera.targetY = null;
+      const anchor = getActiveZoomAnchor();
+      const anchorScreenX = camera.x + anchor.x * camera.zoom;
+      const anchorScreenY = camera.y + anchor.y * camera.zoom;
+      const newZoom = Math.min(2.5, Math.max(0.25, camera.zoom * (e.deltaY < 0 ? 1.13 : 0.885)));
+      camera.x = anchorScreenX - anchor.x * newZoom;
+      camera.y = anchorScreenY - anchor.y * newZoom;
+      camera.zoom = newZoom;
+      syncPopoverScreenPosition();
+    }, { passive: false });
+
+    window.addEventListener('resize', resizeViewport);
+
+    document.querySelectorAll('.geo-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.geo-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentLayout = btn.dataset.mode;
+        if (core) {
+          core.computeLayout(currentLayout, currentLayout === 'Orbit' ? 500.0 : 420.0, 175.0);
+          refreshAllViews();
+        }
+      });
+    });
+
+    document.getElementById('btn-center-ciel').addEventListener('click', centerOnCiel);
+
+    const cielTerminal = document.getElementById('ui-ciel-terminal');
+    document.getElementById('btn-minimize-orb').addEventListener('click', e => {
+      e.stopPropagation();
+      cielTerminal.classList.add('orb-minimized');
+    });
+
+    document.getElementById('ciel-sphere-click-area').addEventListener('click', () => {
+      if (cielTerminal.classList.contains('orb-minimized')) {
+        cielTerminal.classList.remove('orb-minimized');
+      }
+      triggerCielPulse(true);
+    });
+
+    document.getElementById('btn-toggle-ciel').addEventListener('click', () => {
+      cielTerminal.classList.remove('orb-minimized');
+      cielTerminal.style.display = cielTerminal.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    document.getElementById('btn-toggle-beacons').addEventListener('click', () => {
+      document.getElementById('ui-beacons-drawer').classList.toggle('visible');
+    });
+
+    const voiceLabModal = document.getElementById('ui-voice-lab-modal');
+    const voiceLabIframe = document.getElementById('voice-lab-iframe');
+    document.getElementById('btn-voice-dna-lab').addEventListener('click', () => {
+      if (voiceLabIframe.src === 'about:blank' || !voiceLabIframe.src.includes('voice_lab.html')) {
+        voiceLabIframe.src = './voice_lab.html';
+      }
+      voiceLabModal.classList.add('open');
+    });
+
+    document.getElementById('btn-close-voice-modal').addEventListener('click', () => {
+      voiceLabModal.classList.remove('open');
+      syncIrminsulVoiceBank();
+    });
+
+    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.pane).classList.add('active');
+      });
+    });
+
+    document.getElementById('btn-close-popover').addEventListener('click', () => {
+      selectedNode = null;
+      document.getElementById('ui-node-popover').style.display = 'none';
+      updateZoomAnchorBadge();
+    });
+
+    document.getElementById('btn-pop-focus-center').addEventListener('click', () => {
+      if (selectedNode) focusCameraOnNode(selectedNode, false);
+    });
+
+    bootIrminsul();
+  </script>
+</body>
+</html>
