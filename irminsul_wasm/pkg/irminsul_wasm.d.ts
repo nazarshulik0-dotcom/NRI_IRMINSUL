@@ -4,49 +4,44 @@
 export class IrminsulEngine {
     free(): void;
     [Symbol.dispose](): void;
+    activate_archangel_beacon(sector_id: number): string;
+    check_fail_safe(query: string, role: UserRole): string;
     /**
-     * Активація Маяка Архангела (1..=9). Якщо всі 9 зібрані — Рафаїль еволюціонує у Manas
+     * 3. ФУНКЦІЯ АРХІТЕКТОРА СІЕЛЬ: Створити нейронний зв'язок між двома вузлами
      */
-    activate_archangel_beacon(beacon_num: number): string;
+    ciel_connect_nodes(from_id: string, to_id: string, label: string): string;
     /**
-     * Fail-Safe перевірка тексту запиту гравця на спойлери перед відправкою в LLM
+     * 5. ФУНКЦІЯ АРХІТЕКТОРА СІЕЛЬ: Видалити вузол із матриці
      */
-    check_fail_safe(user_query: string, role: UserRole): string;
-    compile_automaton_script(words_csv: string): string;
+    ciel_remove_node(node_id: string): string;
+    /**
+     * 4. ФУНКЦІЯ АРХІТЕКТОРА СІЕЛЬ: Змінити статус карантину / дешифровки вузла
+     */
+    ciel_set_node_access(node_id: string, is_decrypted: boolean, locked_by_gm: boolean): string;
+    /**
+     * 2. ФУНКЦІЯ АРХІТЕКТОРА СІЕЛЬ: Додати або оновити вузол наживо
+     */
+    ciel_upsert_node(id: string, title: string, summary: string, category: string, sector_id: number, is_decrypted: boolean, locked_by_gm: boolean): string;
+    /**
+     * Математичний розрахунок 4 режимів геометрії (Tree, Radial, Orbit, Hex)
+     */
     compute_layout(mode: LayoutMode, base_radius: number, hex_size: number): void;
-    /**
-     * Крок 2: Гравці відповідають «Так, розшифруй» — Сіель відкриває вузол і оновлює карту
-     */
     confirm_echolocation(node_id: string): string;
+    decrypt_api_key(encrypted: Uint8Array | number[], master_pass: string): string;
+    encrypt_api_key_to_vector(raw_key: string, master_pass: string): Uint8Array;
     /**
-     * Відновлює API-ключ у пам'яті браузера з числового вектора після введення пароля Майстра
+     * 6. Експорт чистої матриці для автоматичного збереження у data/ciel_matrix.json
      */
-    static decrypt_api_key_from_vector(encrypted_vec: Uint8Array | number[], master_password: string): string;
-    /**
-     * Перетворює відкритий API-ключ на зашифрований числовий вектор під пароль Майстра
-     */
-    static encrypt_api_key_to_vector(raw_key: string, master_password: string): Uint8Array;
-    /**
-     * Віддає список вузлів та ребер з урахуванням ролі (Гравець бачить гліфи на закритих вузлах, Майстер — усе)
-     */
+    export_master_matrix_json(): string;
     export_view_json(role: UserRole): string;
+    ingest_session_logs(session_title: string, events_json: string): string;
     /**
-     * Вплітає масив подій із history.js (Листи Персонажів + Карта + Діалоги) у нову гілку Ірмінсуля
+     * 1. ЗАВАНТАЖЕННЯ ПОВНОЇ БАЗИ З data/ciel_matrix.json У RUST
      */
-    ingest_session_logs(session_id: string, title: string, logs_json: string): string;
-    /**
-     * Додавання вивченого слова мови Вавилонії та компіляція скрипту для автоматонів
-     */
-    learn_babylon_word(word: string): void;
+    load_external_matrix(raw_json: string): string;
+    lock_topic(topic: string): void;
     constructor();
-    /**
-     * Крок 1: Гравці клікають на зашифрований маркер на карті
-     */
     request_echolocation(node_id: string): string;
-    /**
-     * Ручне блокування/розблокування теми Майстром (аналог команди /lock_topic)
-     */
-    set_topic_lock(topic: string, locked: boolean): void;
 }
 
 export enum LayoutMode {
@@ -74,17 +69,21 @@ export interface InitOutput {
     readonly __wbg_irminsulengine_free: (a: number, b: number) => void;
     readonly irminsulengine_activate_archangel_beacon: (a: number, b: number) => [number, number];
     readonly irminsulengine_check_fail_safe: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly irminsulengine_compile_automaton_script: (a: number, b: number, c: number) => [number, number];
+    readonly irminsulengine_ciel_connect_nodes: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
+    readonly irminsulengine_ciel_remove_node: (a: number, b: number, c: number) => [number, number];
+    readonly irminsulengine_ciel_set_node_access: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly irminsulengine_ciel_upsert_node: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => [number, number];
     readonly irminsulengine_compute_layout: (a: number, b: number, c: number, d: number) => void;
     readonly irminsulengine_confirm_echolocation: (a: number, b: number, c: number) => [number, number];
-    readonly irminsulengine_decrypt_api_key_from_vector: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly irminsulengine_encrypt_api_key_to_vector: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly irminsulengine_decrypt_api_key: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly irminsulengine_encrypt_api_key_to_vector: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly irminsulengine_export_master_matrix_json: (a: number) => [number, number];
     readonly irminsulengine_export_view_json: (a: number, b: number) => [number, number];
-    readonly irminsulengine_ingest_session_logs: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
-    readonly irminsulengine_learn_babylon_word: (a: number, b: number, c: number) => void;
+    readonly irminsulengine_ingest_session_logs: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly irminsulengine_load_external_matrix: (a: number, b: number, c: number) => [number, number];
+    readonly irminsulengine_lock_topic: (a: number, b: number, c: number) => void;
     readonly irminsulengine_new: () => number;
     readonly irminsulengine_request_echolocation: (a: number, b: number, c: number) => [number, number];
-    readonly irminsulengine_set_topic_lock: (a: number, b: number, c: number, d: number) => void;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;

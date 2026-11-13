@@ -12,15 +12,14 @@ export class IrminsulEngine {
         wasm.__wbg_irminsulengine_free(ptr, 0);
     }
     /**
-     * Активація Маяка Архангела (1..=9). Якщо всі 9 зібрані — Рафаїль еволюціонує у Manas
-     * @param {number} beacon_num
+     * @param {number} sector_id
      * @returns {string}
      */
-    activate_archangel_beacon(beacon_num) {
+    activate_archangel_beacon(sector_id) {
         let deferred1_0;
         let deferred1_1;
         try {
-            const ret = wasm.irminsulengine_activate_archangel_beacon(this.__wbg_ptr, beacon_num);
+            const ret = wasm.irminsulengine_activate_archangel_beacon(this.__wbg_ptr, sector_id);
             deferred1_0 = ret[0];
             deferred1_1 = ret[1];
             return getStringFromWasm0(ret[0], ret[1]);
@@ -29,17 +28,16 @@ export class IrminsulEngine {
         }
     }
     /**
-     * Fail-Safe перевірка тексту запиту гравця на спойлери перед відправкою в LLM
-     * @param {string} user_query
+     * @param {string} query
      * @param {UserRole} role
      * @returns {string}
      */
-    check_fail_safe(user_query, role) {
+    check_fail_safe(query, role) {
         let deferred3_0;
         let deferred3_1;
         try {
             const val2 = +role;
-            const ptr0 = passStringToWasm0(user_query, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const ptr0 = passStringToWasm0(query, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len0 = WASM_VECTOR_LEN;
             const ret = wasm.irminsulengine_check_fail_safe(this.__wbg_ptr, ptr0, len0, val2);
             deferred3_0 = ret[0];
@@ -50,16 +48,50 @@ export class IrminsulEngine {
         }
     }
     /**
-     * @param {string} words_csv
+     * 3. ФУНКЦІЯ АРХІТЕКТОРА СІЕЛЬ: Створити нейронний зв'язок між двома вузлами
+     * @param {string} from_id
+     * @param {string} to_id
+     * @param {string} label
      * @returns {string}
      */
-    compile_automaton_script(words_csv) {
+    ciel_connect_nodes(from_id, to_id, label) {
+        let deferred4_0;
+        let deferred4_1;
+        try {
+            let ptr0, len0, ptr1, len1, ptr2, len2;
+            try {
+                ptr0 = passStringToWasm0(from_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len0 = WASM_VECTOR_LEN;
+                ptr1 = passStringToWasm0(to_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len1 = WASM_VECTOR_LEN;
+                ptr2 = passStringToWasm0(label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len2 = WASM_VECTOR_LEN;
+            } catch (e) {
+                if (ptr2) { wasm.__wbindgen_free(ptr2, len2 * 1, 1); }
+                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+                throw e;
+            }
+            const ret = wasm.irminsulengine_ciel_connect_nodes(this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2);
+            deferred4_0 = ret[0];
+            deferred4_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+        }
+    }
+    /**
+     * 5. ФУНКЦІЯ АРХІТЕКТОРА СІЕЛЬ: Видалити вузол із матриці
+     * @param {string} node_id
+     * @returns {string}
+     */
+    ciel_remove_node(node_id) {
         let deferred2_0;
         let deferred2_1;
         try {
-            const ptr0 = passStringToWasm0(words_csv, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const ptr0 = passStringToWasm0(node_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len0 = WASM_VECTOR_LEN;
-            const ret = wasm.irminsulengine_compile_automaton_script(this.__wbg_ptr, ptr0, len0);
+            const ret = wasm.irminsulengine_ciel_remove_node(this.__wbg_ptr, ptr0, len0);
             deferred2_0 = ret[0];
             deferred2_1 = ret[1];
             return getStringFromWasm0(ret[0], ret[1]);
@@ -68,6 +100,73 @@ export class IrminsulEngine {
         }
     }
     /**
+     * 4. ФУНКЦІЯ АРХІТЕКТОРА СІЕЛЬ: Змінити статус карантину / дешифровки вузла
+     * @param {string} node_id
+     * @param {boolean} is_decrypted
+     * @param {boolean} locked_by_gm
+     * @returns {string}
+     */
+    ciel_set_node_access(node_id, is_decrypted, locked_by_gm) {
+        let deferred4_0;
+        let deferred4_1;
+        try {
+            const val2 = +is_decrypted;
+            const val3 = +locked_by_gm;
+            const ptr0 = passStringToWasm0(node_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len0 = WASM_VECTOR_LEN;
+            const ret = wasm.irminsulengine_ciel_set_node_access(this.__wbg_ptr, ptr0, len0, val2, val3);
+            deferred4_0 = ret[0];
+            deferred4_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+        }
+    }
+    /**
+     * 2. ФУНКЦІЯ АРХІТЕКТОРА СІЕЛЬ: Додати або оновити вузол наживо
+     * @param {string} id
+     * @param {string} title
+     * @param {string} summary
+     * @param {string} category
+     * @param {number} sector_id
+     * @param {boolean} is_decrypted
+     * @param {boolean} locked_by_gm
+     * @returns {string}
+     */
+    ciel_upsert_node(id, title, summary, category, sector_id, is_decrypted, locked_by_gm) {
+        let deferred8_0;
+        let deferred8_1;
+        try {
+            const val5 = +sector_id;
+            const val6 = +is_decrypted;
+            const val7 = +locked_by_gm;
+            let ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3;
+            try {
+                ptr0 = passStringToWasm0(id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len0 = WASM_VECTOR_LEN;
+                ptr1 = passStringToWasm0(title, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len1 = WASM_VECTOR_LEN;
+                ptr2 = passStringToWasm0(summary, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len2 = WASM_VECTOR_LEN;
+                ptr3 = passStringToWasm0(category, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len3 = WASM_VECTOR_LEN;
+            } catch (e) {
+                if (ptr3) { wasm.__wbindgen_free(ptr3, len3 * 1, 1); }
+                if (ptr2) { wasm.__wbindgen_free(ptr2, len2 * 1, 1); }
+                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+                throw e;
+            }
+            const ret = wasm.irminsulengine_ciel_upsert_node(this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, val5, val6, val7);
+            deferred8_0 = ret[0];
+            deferred8_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred8_0, deferred8_1, 1);
+        }
+    }
+    /**
+     * Математичний розрахунок 4 режимів геометрії (Tree, Radial, Orbit, Hex)
      * @param {LayoutMode} mode
      * @param {number} base_radius
      * @param {number} hex_size
@@ -76,7 +175,6 @@ export class IrminsulEngine {
         wasm.irminsulengine_compute_layout(this.__wbg_ptr, mode, base_radius, hex_size);
     }
     /**
-     * Крок 2: Гравці відповідають «Так, розшифруй» — Сіель відкриває вузол і оновлює карту
      * @param {string} node_id
      * @returns {string}
      */
@@ -95,27 +193,26 @@ export class IrminsulEngine {
         }
     }
     /**
-     * Відновлює API-ключ у пам'яті браузера з числового вектора після введення пароля Майстра
-     * @param {Uint8Array | number[]} encrypted_vec
-     * @param {string} master_password
+     * @param {Uint8Array | number[]} encrypted
+     * @param {string} master_pass
      * @returns {string}
      */
-    static decrypt_api_key_from_vector(encrypted_vec, master_password) {
+    decrypt_api_key(encrypted, master_pass) {
         let deferred3_0;
         let deferred3_1;
         try {
             let ptr0, len0, ptr1, len1;
             try {
-                ptr0 = passArray8ToWasm0(encrypted_vec, wasm.__wbindgen_malloc);
+                ptr0 = passArray8ToWasm0(encrypted, wasm.__wbindgen_malloc);
                 len0 = WASM_VECTOR_LEN;
-                ptr1 = passStringToWasm0(master_password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                ptr1 = passStringToWasm0(master_pass, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
                 len1 = WASM_VECTOR_LEN;
             } catch (e) {
                 if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
                 if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
                 throw e;
             }
-            const ret = wasm.irminsulengine_decrypt_api_key_from_vector(ptr0, len0, ptr1, len1);
+            const ret = wasm.irminsulengine_decrypt_api_key(this.__wbg_ptr, ptr0, len0, ptr1, len1);
             deferred3_0 = ret[0];
             deferred3_1 = ret[1];
             return getStringFromWasm0(ret[0], ret[1]);
@@ -124,30 +221,44 @@ export class IrminsulEngine {
         }
     }
     /**
-     * Перетворює відкритий API-ключ на зашифрований числовий вектор під пароль Майстра
      * @param {string} raw_key
-     * @param {string} master_password
+     * @param {string} master_pass
      * @returns {Uint8Array}
      */
-    static encrypt_api_key_to_vector(raw_key, master_password) {
+    encrypt_api_key_to_vector(raw_key, master_pass) {
         let ptr0, len0, ptr1, len1;
         try {
             ptr0 = passStringToWasm0(raw_key, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             len0 = WASM_VECTOR_LEN;
-            ptr1 = passStringToWasm0(master_password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            ptr1 = passStringToWasm0(master_pass, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             len1 = WASM_VECTOR_LEN;
         } catch (e) {
             if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
             if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
             throw e;
         }
-        const ret = wasm.irminsulengine_encrypt_api_key_to_vector(ptr0, len0, ptr1, len1);
+        const ret = wasm.irminsulengine_encrypt_api_key_to_vector(this.__wbg_ptr, ptr0, len0, ptr1, len1);
         var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
         return v3;
     }
     /**
-     * Віддає список вузлів та ребер з урахуванням ролі (Гравець бачить гліфи на закритих вузлах, Майстер — усе)
+     * 6. Експорт чистої матриці для автоматичного збереження у data/ciel_matrix.json
+     * @returns {string}
+     */
+    export_master_matrix_json() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.irminsulengine_export_master_matrix_json(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
      * @param {UserRole} role
      * @returns {string}
      */
@@ -164,46 +275,59 @@ export class IrminsulEngine {
         }
     }
     /**
-     * Вплітає масив подій із history.js (Листи Персонажів + Карта + Діалоги) у нову гілку Ірмінсуля
-     * @param {string} session_id
-     * @param {string} title
-     * @param {string} logs_json
+     * @param {string} session_title
+     * @param {string} events_json
      * @returns {string}
      */
-    ingest_session_logs(session_id, title, logs_json) {
-        let deferred4_0;
-        let deferred4_1;
+    ingest_session_logs(session_title, events_json) {
+        let deferred3_0;
+        let deferred3_1;
         try {
-            let ptr0, len0, ptr1, len1, ptr2, len2;
+            let ptr0, len0, ptr1, len1;
             try {
-                ptr0 = passStringToWasm0(session_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                ptr0 = passStringToWasm0(session_title, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
                 len0 = WASM_VECTOR_LEN;
-                ptr1 = passStringToWasm0(title, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                ptr1 = passStringToWasm0(events_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
                 len1 = WASM_VECTOR_LEN;
-                ptr2 = passStringToWasm0(logs_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-                len2 = WASM_VECTOR_LEN;
             } catch (e) {
-                if (ptr2) { wasm.__wbindgen_free(ptr2, len2 * 1, 1); }
                 if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
                 if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
                 throw e;
             }
-            const ret = wasm.irminsulengine_ingest_session_logs(this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2);
-            deferred4_0 = ret[0];
-            deferred4_1 = ret[1];
+            const ret = wasm.irminsulengine_ingest_session_logs(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+            deferred3_0 = ret[0];
+            deferred3_1 = ret[1];
             return getStringFromWasm0(ret[0], ret[1]);
         } finally {
-            wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+            wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
         }
     }
     /**
-     * Додавання вивченого слова мови Вавилонії та компіляція скрипту для автоматонів
-     * @param {string} word
+     * 1. ЗАВАНТАЖЕННЯ ПОВНОЇ БАЗИ З data/ciel_matrix.json У RUST
+     * @param {string} raw_json
+     * @returns {string}
      */
-    learn_babylon_word(word) {
-        const ptr0 = passStringToWasm0(word, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    load_external_matrix(raw_json) {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ptr0 = passStringToWasm0(raw_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len0 = WASM_VECTOR_LEN;
+            const ret = wasm.irminsulengine_load_external_matrix(this.__wbg_ptr, ptr0, len0);
+            deferred2_0 = ret[0];
+            deferred2_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * @param {string} topic
+     */
+    lock_topic(topic) {
+        const ptr0 = passStringToWasm0(topic, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.irminsulengine_learn_babylon_word(this.__wbg_ptr, ptr0, len0);
+        wasm.irminsulengine_lock_topic(this.__wbg_ptr, ptr0, len0);
     }
     constructor() {
         const ret = wasm.irminsulengine_new();
@@ -212,7 +336,6 @@ export class IrminsulEngine {
         return this;
     }
     /**
-     * Крок 1: Гравці клікають на зашифрований маркер на карті
      * @param {string} node_id
      * @returns {string}
      */
@@ -229,17 +352,6 @@ export class IrminsulEngine {
         } finally {
             wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
         }
-    }
-    /**
-     * Ручне блокування/розблокування теми Майстром (аналог команди /lock_topic)
-     * @param {string} topic
-     * @param {boolean} locked
-     */
-    set_topic_lock(topic, locked) {
-        const val2 = +locked;
-        const ptr0 = passStringToWasm0(topic, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        wasm.irminsulengine_set_topic_lock(this.__wbg_ptr, ptr0, len0, val2);
     }
 }
 if (Symbol.dispose) IrminsulEngine.prototype[Symbol.dispose] = IrminsulEngine.prototype.free;
