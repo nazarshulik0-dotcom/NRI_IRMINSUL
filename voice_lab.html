@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ІРМІНСУЛЬ // Кузня Голосового ДНК (Voice DNA Extractor)</title>
+  <style>
+    :root {
+      --bg-root: #030d0a;
+      --bg-card: rgba(6, 22, 17, 0.94);
+      --neon: #00e676;
+      --cyan: #22d3ee;
+      --amber: #f59e0b;
+      --text: #e2f8ee;
+      --dim: #7fa896;
+      --border: rgba(0, 230, 118, 0.35);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at 50% 25%, #072219 0%, #030d0a 75%);
+      color: var(--text);
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .lab-container {
+      max-width: 960px;
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .lab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .lab-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--neon);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 780px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .box {
+      background: rgba(2, 10, 8, 0.88);
+      border: 1px solid rgba(0, 230, 118, 0.25);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    label {
+      font-size: 11.5px;
+      color: var(--dim);
+      font-weight: 600;
+    }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      background: #020806;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 12.5px;
+      outline: none;
+    }
+
+    .btn {
+      background: rgba(0, 230, 118, 0.16);
+      border: 1px solid var(--neon);
+      color: #b9f6ca;
+      padding: 10px 14px;
+      border-radius: 9px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: rgba(0, 230, 118, 0.28);
+      box-shadow: 0 0 16px rgba(0, 230, 118, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .bars-wrap {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      height: 110px;
+      align-items: end;
+      padding: 10px;
+      background: #020705;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 230, 118, 0.2);
+    }
+
+    .bar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar-fill {
+      width: 100%;
+      background: linear-gradient(180deg, var(--cyan), var(--neon));
+      border-radius: 4px 4px 0 0;
+      min-height: 6px;
+      transition: height 0.25s ease;
+    }
+
+    .bar-lbl {
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--dim);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lab-container">
+    <div class="lab-header">
+      <div class="lab-title">🌳 ІРМІНСУЛЬ // КУЗНЯ ГОЛОСОВОГО ДНК (VOICE PRINT CLONER)</div>
+      <span id="lab-status" style="font-family:monospace;font-size:12px;color:var(--neon);">READY FOR REFERENCE</span>
+    </div>
+
+    <div class="grid-2">
+      <!-- ЛІВИЙ БЛОК: ЗАВАНТАЖЕННЯ РЕФЕРЕНСУ З АНІМАТИКА -->
+      <div class="box">
+        <label>1. Обери ID профілю в базі «Ірмінсуля»:</label>
+        <select id="target-profile-id">
+          <option value="raphael_archangel_1">raphael_archangel_1 (Рафаїль // Вежа Архангела I)</option>
+          <option value="manas_raphael_9">manas_raphael_9 (Манас Рафаїль // Синтез 9/9)</option>
+          <option value="ciel_core_0">ciel_core_0 (Ядро Сіель // Сектор 0)</option>
+        </select>
+
+        <label>2. Назва профілю:</label>
+        <input type="text" id="target-profile-title" value="Рафаїль // Вежа Архангела I (Cloned DNA)" />
+
+        <label>3. Завантаж еталонний фрагмент голосу (15–30 сек із аніматика / REAPER):</label>
+        <label class="btn" style="margin-top:2px;">
+          🧬 Обрати аудіо-референс (WAV / MP3 / OGG)
+          <input type="file" id="ref-audio-input" accept="audio/*" style="display:none;" />
+        </label>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+          <button type="button" id="btn-preview-dna" class="btn" style="border-color:var(--cyan);color:#a5f3fc;">
+            ▶️ Прослухати з ДНК
+          </button>
+          <button type="button" id="btn-copy-json" class="btn">
+            📋 Скопіювати весь JSON
+          </button>
+        </div>
+      </div>
+
+      <!-- ПРАВИЙ БЛОК: СПЕКТРАЛЬНИЙ СЛІПОК ФОРМАНТ -->
+      <div class="box">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label>Спектральний відбиток 6 формант + F0:</label>
+          <span id="f0-readout" style="font-family:monospace;font-size:12px;color:var(--cyan);">F0: 114.5 Hz | Pitch: x0.94</span>
+        </div>
+
+        <div class="bars-wrap" id="formant-bars">
+          <div class="bar-col"><div class="bar-fill" style="height:65%;"></div><span class="bar-lbl">115Hz</span></div>
+          <div class="bar-col"><div class="bar-fill" style="height:55%;"></div><span class="bar-lbl">250Hz</span></div>
+          <div class="bar-col"><div class="bar-fill" style="height:30%;"></div><span class="bar-lbl">580Hz</span></div>
+          <div class="bar-col"><div class="bar-fill" style="height:62%;"></div><span class="bar-lbl">1.3kHz</span></div>
+          <div class="bar-col"><div class="bar-fill" style="height:52%;"></div><span class="bar-lbl">2.7kHz</span></div>
+          <div class="bar-col"><div class="bar-fill" style="height:35%;"></div><span class="bar-lbl">4.6kHz</span></div>
+        </div>
+
+        <label>Вектор ДНК для Rust WASM (`dna_vector` — 10 параметрів):</label>
+        <input type="text" id="dna-vector-input" value="[114.5, 4.2, 2.6, -2.1, 3.4, 2.1, -1.5, 0.22, 0.36, 1.32]" readonly />
+      </div>
+    </div>
+
+    <!-- ГОТОВИЙ JSON ФАЙЛ ДЛЯ ІРМІНСУЛЯ -->
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <label>Готовий код `voices/irminsul_voice_bank.json` (просто збережи у репозиторій Ірмінсуля):</label>
+        <button type="button" id="btn-download-json" class="btn" style="padding:5px 12px;font-size:11px;">
+          💾 Завантажити файл irminsul_voice_bank.json
+        </button>
+      </div>
+      <textarea id="bank-json-output" rows="13" readonly></textarea>
+    </div>
+  </div>
+
+  <script type="module">
+    const VOICE_BANK = {
+      schema_version: '2.0-irminsul-voice-dna',
+      updated_at: new Date().toISOString().split('T')[0],
+      profiles: {
+        raphael_archangel_1: {
+          id: 'raphael_archangel_1',
+          title: 'Рафаїль // Вежа Архангела I (Apex Matrix)',
+          carrier_voice: 'uk-UA-OstapNeural',
+          pitch_ratio: 0.94,
+          dna_vector: [114.5, 4.2, 2.6, -2.1, 3.4, 2.1, -1.5, 0.22, 0.36, 1.32],
+          samples: {}
+        },
+        manas_raphael_9: {
+          id: 'manas_raphael_9',
+          title: 'Манас Рафаїль // Синтез 9/9 Маяків',
+          carrier_voice: 'uk-UA-OstapNeural',
+          pitch_ratio: 0.91,
+          dna_vector: [104.0, 5.1, 3.0, -1.4, 3.8, 2.5, -0.8, 0.28, 0.44, 1.40],
+          samples: {}
+        },
+        ciel_core_0: {
+          id: 'ciel_core_0',
+          title: 'Ядро Сіель // Сектор 0 (Канон Tensura)',
+          carrier_voice: 'uk-UA-PolinaNeural',
+          pitch_ratio: 0.97,
+          dna_vector: [188.0, 1.8, 2.4, -1.2, 3.6, 2.8, 1.2, 0.08, 0.30, 1.20],
+          samples: {}
+        }
+      }
+    };
+
+    let audioCtx = null;
+    let lastDecodedBuffer = null;
+
+    const profileSelect = document.getElementById('target-profile-id');
+    const titleInput = document.getElementById('target-profile-title');
+    const dnaInput = document.getElementById('dna-vector-input');
+    const jsonOutput = document.getElementById('bank-json-output');
+    const f0Readout = document.getElementById('f0-readout');
+    const statusEl = document.getElementById('lab-status');
+
+    function renderBankJson() {
+      jsonOutput.value = JSON.stringify(VOICE_BANK, null, 2);
+    }
+
+    function updateBars(dna) {
+      const fills = document.querySelectorAll('.bar-fill');
+      for (let i = 0; i < 6; i++) {
+        const db = dna[i + 1] || 0;
+        const pct = Math.max(10, Math.min(100, Math.round(((db + 7) / 15) * 100)));
+        if (fills[i]) fills[i].style.height = `${pct}%`;
+      }
+    }
+
+    profileSelect.addEventListener('change', () => {
+      const p = VOICE_BANK.profiles[profileSelect.value];
+      if (!p) return;
+      titleInput.value = p.title;
+      dnaInput.value = JSON.stringify(p.dna_vector);
+      f0Readout.textContent = `F0: ${p.dna_vector[0]} Hz | Pitch: x${p.pitch_ratio}`;
+      updateBars(p.dna_vector);
+    });
+
+    // Точний математичний екстрактор 10-параметрового ДНК з твого аудіо-референсу
+    document.getElementById('ref-audio-input').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      statusEl.textContent = '⏳ ВИТЯГУЄМО ДНК ГОЛОСУ...';
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+      const arr = await file.arrayBuffer();
+      const buf = await audioCtx.decodeAudioData(arr);
+      lastDecodedBuffer = buf;
+
+      const pcm = buf.getChannelData(0);
+      const sr = buf.sampleRate;
+      const step = Math.max(1, Math.floor(pcm.length / 32000));
+
+      let rmsSum = 0;
+      let zcr = 0;
+      let count = 0;
+      for (let i = step; i < pcm.length; i += step) {
+        const s = pcm[i];
+        const prev = pcm[i - step];
+        rmsSum += s * s;
+        if ((prev >= 0 && s < 0) || (prev < 0 && s >= 0)) zcr++;
+        count++;
+      }
+
+      const n = Math.max(1, count);
+      const rms = Math.max(0.005, Math.sqrt(rmsSum / n));
+      const rawF0 = ((zcr / n) * (sr / step)) * 0.24;
+      const f0Hz = Number(Math.max(82, Math.min(240, rawF0)).toFixed(1));
+
+      const freqs = [115, 250, 580, 1350, 2750, 4600];
+      const bandDb = [];
+
+      for (const freq of freqs) {
+        const w0 = (2 * Math.PI * freq) / sr;
+        const alpha = Math.sin(w0) / 3.0;
+        const cosW0 = Math.cos(w0);
+        let z1 = 0, z2 = 0, eSum = 0;
+        for (let i = 0; i < pcm.length; i += step) {
+          const x = pcm[i];
+          const y = alpha * x + z1;
+          z1 = -2 * cosW0 * y + z2;
+          z2 = -alpha * x - (1 - alpha) * y;
+          eSum += y * y;
+        }
+        const bRms = Math.sqrt(eSum / n);
+        const db = Number(Math.max(-6.5, Math.min(7.5, 20 * Math.log10(Math.max(0.25, bRms / rms)) * 0.85)).toFixed(2));
+        bandDb.push(db);
+      }
+
+      const subWeight = f0Hz < 135 ? 0.24 : 0.10;
+      const doublerMix = 0.36;
+      const drive = Number(Math.max(1.08, Math.min(1.65, 1.18 + rms * 1.1)).toFixed(2));
+      const pitchRatio = Number(Math.max(0.85, Math.min(1.06, f0Hz / 126.0)).toFixed(2));
+
+      const dnaVec = [f0Hz, ...bandDb, subWeight, doublerMix, drive];
+      const id = profileSelect.value;
+
+      VOICE_BANK.profiles[id] = {
+        id,
+        title: titleInput.value.trim() || `Cloned: ${file.name}`,
+        carrier_voice: f0Hz > 165 ? 'uk-UA-PolinaNeural' : 'uk-UA-OstapNeural',
+        pitch_ratio: pitchRatio,
+        dna_vector: dnaVec,
+        samples: VOICE_BANK.profiles[id]?.samples || {}
+      };
+      VOICE_BANK.updated_at = new Date().toISOString().split('T')[0];
+
+      dnaInput.value = JSON.stringify(dnaVec);
+      f0Readout.textContent = `F0: ${f0Hz} Hz | Pitch: x${pitchRatio}`;
+      updateBars(dnaVec);
+      renderBankJson();
+
+      statusEl.textContent = `✅ ДНК ВИТЯГНУТО З «${file.name.toUpperCase()}»`;
+    });
+
+    // Прослуховування референсу крізь створену матрицю формант
+    document.getElementById('btn-preview-dna').addEventListener('click', async () => {
+      if (!lastDecodedBuffer) {
+        statusEl.textContent = '⚠️ СПОЧАТКУ ОБЕРИ АУДІО-РЕФЕРЕНС!';
+        return;
+      }
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      const prof = VOICE_BANK.profiles[profileSelect.value];
+      const src = audioCtx.createBufferSource();
+      src.buffer = lastDecodedBuffer;
+      src.playbackRate.value = prof.pitch_ratio || 0.94;
+
+      const freqs = [115, 250, 580, 1350, 2750, 4600];
+      let node = src;
+      freqs.forEach((f, idx) => {
+        const eq = audioCtx.createBiquadFilter();
+        eq.type = 'peaking';
+        eq.frequency.value = f;
+        eq.Q.value = 1.4;
+        eq.gain.value = prof.dna_vector[idx + 1] || 0;
+        node.connect(eq);
+        node = eq;
+      });
+      node.connect(audioCtx.destination);
+      src.start(0, 0, Math.min(6, lastDecodedBuffer.duration));
+      statusEl.textContent = '🔊 ПРОСЛУХОВУВАННЯ ДНК-ПРОФІЛЮ...';
+    });
+
+    document.getElementById('btn-copy-json').addEventListener('click', async () => {
+      await navigator.clipboard.writeText(jsonOutput.value);
+      statusEl.textContent = '📋 JSON СКОПІЙОВАНО В БУФЕР ОБМІНУ!';
+    });
+
+    document.getElementById('btn-download-json').addEventListener('click', () => {
+      const blob = new Blob([jsonOutput.value], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'irminsul_voice_bank.json';
+      a.click();
+    });
+
+    renderBankJson();
+  </script>
+</body>
+</html>
